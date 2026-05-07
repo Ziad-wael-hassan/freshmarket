@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#22c55e" />
+
+  <!-- Dark mode FOUC prevention - must run BEFORE React loads -->
+  <script>
+    (function () {
+      const theme = localStorage.getItem('theme')
+      const prefersDark = window.matchMedia(
+        '(prefers-color-scheme: dark)'
+      ).matches
+      if (theme === 'dark' || (!theme && prefersDark)) {
+        document.documentElement.classList.add('dark')
+      }
+    })()
+  </script>
+
+  <title>FreshCart — Premium E-Commerce Platform</title>
+</head>
+
+<body class="bg-white text-gray-900 dark:bg-surface-dark dark:text-gray-100">
+  <div id="root"></div>
+  <script type="module" src="/src/main.jsx"></script>
+</body>
+
+</html>
