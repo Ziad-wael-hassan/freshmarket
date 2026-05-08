@@ -1,0 +1,237 @@
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { Helmet } from 'react-helmet-async'
+import { motion } from 'framer-motion'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useAuth } from '@/context/AuthContext'
+import { Button } from '@/components/ui/Button'
+import { Input } from '@/components/ui/Input'
+import { FloatingInput } from '@/components/ui/FloatingInput'
+import { PasswordStrength } from '@/components/ui/PasswordStrength'
+import { ScrollReveal } from '@/components/common/ScrollReveal'
+import { registerSchema } from '@/validations/auth'
+import { Eye, EyeOff, Mail, Lock, User, Phone, ArrowRight } from 'lucide-react'
+import toast from 'react-hot-toast'
+
+export const Register = () => {
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const { register: registerUser } = useAuth()
+  const navigate = useNavigate()
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(registerSchema),
+  })
+
+  const passwordValue = watch('password', '')
+
+  const onSubmit = async (data) => {
+    setLoading(true)
+    try {
+      await registerUser({
+        name: data.name,
+        email: data.email,
+        password: data.password,
+        rePassword: data.confirmPassword,
+      })
+      toast.success('Account created successfully! Welcome to FreshCart!')
+      navigate('/', { replace: true })
+    } catch (error) {
+      toast.error(error?.response?.data?.message || 'Failed to create account. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <>
+      <Helmet>
+        <title>Register — FreshCart</title>
+      </Helmet>
+
+      <div className="min-h-screen flex">
+        <div className="flex-1 flex items-center justify-center p-8">
+          <ScrollReveal className="w-full max-w-md">
+            <div className="text-center mb-8">
+              <Link to="/" className="inline-flex items-center gap-3 mb-8">
+                <div className="h-10 w-10 rounded-lg bg-primary-500 flex items-center justify-center">
+                  <span className="text-white font-bold text-xl">F</span>
+                </div>
+                <span className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                  FreshCart
+                </span>
+              </Link>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+                Create your account
+              </h1>
+              <p className="text-gray-600 dark:text-gray-400">
+                Join thousands of happy customers shopping with us
+              </p>
+            </div>
+
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Full Name
+                </label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+                  <Input
+                    {...register('name')}
+                    type="text"
+                    placeholder="Enter your full name"
+                    className="pl-10"
+                    error={errors.name?.message}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Email Address
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+                  <Input
+                    {...register('email')}
+                    type="email"
+                    placeholder="Enter your email"
+                    className="pl-10"
+                    error={errors.email?.message}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Phone Number
+                </label>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+                  <Input
+                    {...register('phone')}
+                    type="tel"
+                    placeholder="Enter your phone number"
+                    className="pl-10"
+                    error={errors.phone?.message}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Password
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+                  <Input
+                    {...register('password')}
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="Create a password"
+                    className="pl-10 pr-10"
+                    error={errors.password?.message}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
+                <PasswordStrength password={passwordValue} />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Confirm Password
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+                  <Input
+                    {...register('confirmPassword')}
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    placeholder="Confirm your password"
+                    className="pl-10 pr-10"
+                    error={errors.confirmPassword?.message}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="terms"
+                  className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                  required
+                />
+                <label htmlFor="terms" className="ml-2 text-sm text-gray-600 dark:text-gray-400">
+                  I agree to the{' '}
+                  <Link to="/terms" className="text-primary-600 hover:text-primary-700">
+                    Terms of Service
+                  </Link>{' '}
+                  and{' '}
+                  <Link to="/privacy" className="text-primary-600 hover:text-primary-700">
+                    Privacy Policy
+                  </Link>
+                </label>
+              </div>
+
+              <Button type="submit" className="w-full" size="lg" loading={loading}>
+                Create Account
+                <ArrowRight size={18} className="ml-2" />
+              </Button>
+            </form>
+
+            <div className="mt-8 text-center">
+              <p className="text-gray-600 dark:text-gray-400">
+                Already have an account?{' '}
+                <Link to="/login" className="text-primary-600 hover:text-primary-700 font-medium">
+                  Sign in
+                </Link>
+              </p>
+            </div>
+          </ScrollReveal>
+        </div>
+
+        <div className="hidden lg:flex flex-1 bg-gradient-to-br from-primary-600 to-primary-800 items-center justify-center p-8">
+          <ScrollReveal delay={0.2}>
+            <div className="text-center text-white">
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 0.5, duration: 0.5 }}
+                className="mb-8"
+              >
+                <div className="h-20 w-20 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mx-auto mb-6">
+                  <span className="text-4xl">🎉</span>
+                </div>
+                <h2 className="text-3xl font-bold mb-4">Join the FreshCart family</h2>
+                <p className="text-lg opacity-90 max-w-md mx-auto">
+                  Get exclusive access to deals, early product launches, and personalized
+                  recommendations.
+                </p>
+              </motion.div>
+            </div>
+          </ScrollReveal>
+        </div>
+      </div>
+    </>
+  )
+}
+
+export default Register
