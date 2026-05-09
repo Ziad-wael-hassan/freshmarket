@@ -6,6 +6,14 @@
 
 const LOCAL_CART_KEY = 'freshcart-guest-cart'
 
+const notifyLocalCartUpdate = (items) => {
+  window.dispatchEvent(
+    new CustomEvent(`local-storage:${LOCAL_CART_KEY}`, {
+      detail: { value: items },
+    })
+  )
+}
+
 /**
  * Get the local cart from localStorage
  * @returns {Array} Array of cart items
@@ -13,14 +21,8 @@ const LOCAL_CART_KEY = 'freshcart-guest-cart'
 export const getLocalCart = () => {
   try {
     const cart = localStorage.getItem(LOCAL_CART_KEY)
-    if (import.meta.env.DEV) {
-      console.log('[LocalCart] Retrieved local cart:', cart ? JSON.parse(cart).length : 0, 'items')
-    }
     return cart ? JSON.parse(cart) : []
-  } catch (error) {
-    if (import.meta.env.DEV) {
-      console.error('[LocalCart] Error getting local cart:', error)
-    }
+  } catch {
     return []
   }
 }
@@ -32,13 +34,9 @@ export const getLocalCart = () => {
 export const setLocalCart = (items) => {
   try {
     localStorage.setItem(LOCAL_CART_KEY, JSON.stringify(items))
-    if (import.meta.env.DEV) {
-      console.log('[LocalCart] Saved local cart with', items.length, 'items')
-    }
-  } catch (error) {
-    if (import.meta.env.DEV) {
-      console.error('[LocalCart] Error saving local cart:', error)
-    }
+    notifyLocalCartUpdate(items)
+  } catch {
+    // Ignore storage quota and serialization failures for guest cart updates.
   }
 }
 
@@ -104,9 +102,7 @@ export const updateLocalCartQuantity = (productId, quantity) => {
  */
 export const clearLocalCart = () => {
   localStorage.removeItem(LOCAL_CART_KEY)
-  if (import.meta.env.DEV) {
-    console.log('[LocalCart] Cleared local cart')
-  }
+  notifyLocalCartUpdate([])
 }
 
 /**
@@ -125,7 +121,7 @@ export const getLocalCartCount = () => {
 export const getLocalCartTotal = () => {
   const cart = getLocalCart()
   return cart.reduce((total, item) => {
-    const price = item.product?.price || 0
+    const price = item.product?.priceAfterDiscount || item.product?.price || 0
     return total + (price * item.quantity)
   }, 0)
 }
@@ -149,16 +145,9 @@ export const mergeLocalCartWithServer = async (addToServerCart) => {
   const localCart = getLocalCart()
   
   if (localCart.length === 0) {
-    if (import.meta.env.DEV) {
-      console.log('[LocalCart] No local cart to merge')
-    }
     return true
   }
-  
-  if (import.meta.env.DEV) {
-    console.log('[LocalCart] Merging', localCart.length, 'items to server cart')
-  }
-  
+
   try {
     // Add each item to server cart sequentially
     for (const item of localCart) {
@@ -167,16 +156,9 @@ export const mergeLocalCartWithServer = async (addToServerCart) => {
     
     // Clear local cart after successful merge
     clearLocalCart()
-    
-    if (import.meta.env.DEV) {
-      console.log('[LocalCart] Successfully merged cart')
-    }
-    
+
     return true
-  } catch (error) {
-    if (import.meta.env.DEV) {
-      console.error('[LocalCart] Error merging cart:', error)
-    }
+  } catch {
     return false
   }
 }
@@ -191,5 +173,4 @@ export default {
   getLocalCartCount,
   getLocalCartTotal,
   hasLocalCartItems,
-  mergeLocalCartWithServer,
 }

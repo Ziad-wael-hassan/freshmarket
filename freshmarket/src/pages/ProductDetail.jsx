@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/Button'
 import { ErrorState } from '@/components/ui/ErrorState'
 import { getErrorMessage } from '@/utils/getErrorMessage'
 import { formatCurrency } from '@/utils/formatters'
+import { normalizeProduct, unwrapApiCollection } from '@/utils/apiData'
 import {
   Heart,
   ShoppingCart,
@@ -24,10 +25,6 @@ import {
   Truck,
   Shield,
   RotateCcw,
-  ChevronLeft,
-  ChevronRight,
-  Minus,
-  Plus,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 
@@ -47,47 +44,73 @@ export const ProductDetail = () => {
   const { addToRecentlyViewed } = useRecentlyViewed()
   const { flyItemToCart } = useCartFly()
 
-  const isWishlisted = isInWishlist(product?._id)
+  const resolvedProduct = normalizeProduct(product)
+  const isWishlisted = isInWishlist(resolvedProduct?._id)
 
   useEffect(() => {
+    let isMounted = true
+
     const fetchProduct = async () => {
       try {
         setLoading(true)
         setError(null)
         const response = await productService.getById(id)
-        const productData = response.data?.data || response.data
-        setProduct(productData)
-        setSelectedImage(0)
-        addToRecentlyViewed(id)
+        const productData = normalizeProduct(response)
+
+        if (isMounted) {
+          setProduct(productData)
+          setSelectedImage(0)
+          addToRecentlyViewed(id)
+        }
       } catch (err) {
-        setError(getErrorMessage(err))
+        if (isMounted) {
+          setError(getErrorMessage(err))
+        }
       } finally {
-        setLoading(false)
+        if (isMounted) {
+          setLoading(false)
+        }
       }
     }
 
     if (id) {
       fetchProduct()
     }
-  }, [id])
+
+    return () => {
+      isMounted = false
+    }
+  }, [addToRecentlyViewed, id])
 
   useEffect(() => {
+    let isMounted = true
+
     const fetchRelatedProducts = async () => {
       if (!product?.category) return
 
       try {
         setRelatedLoading(true)
         const response = await productService.getRelated(product.category._id, 4)
-        setRelatedProducts(response.data.data || [])
+        if (isMounted) {
+          setRelatedProducts(unwrapApiCollection(response).map((item) => normalizeProduct(item)).filter(Boolean))
+        }
       } catch (err) {
-        console.error('Failed to fetch related products:', err)
+        if (isMounted) {
+          setRelatedProducts([])
+        }
       } finally {
-        setRelatedLoading(false)
+        if (isMounted) {
+          setRelatedLoading(false)
+        }
       }
     }
 
     if (product) {
       fetchRelatedProducts()
+    }
+
+    return () => {
+      isMounted = false
     }
   }, [product])
 
@@ -105,14 +128,14 @@ export const ProductDetail = () => {
   }, [loading])
 
   const handleAddToCart = async () => {
-    if (!product) return
+    if (!resolvedProduct) return
 
     const mainImage = document.querySelector('#main-product-image')
     if (mainImage) {
-      flyItemToCart(product.imageCover, mainImage.getBoundingClientRect())
+      flyItemToCart(resolvedProduct.imageCover, mainImage.getBoundingClientRect())
     }
 
-    const result = await addItem(product._id)
+    const result = await addItem(resolvedProduct, quantity)
     if (result.success) {
       toast.success('Added to cart!')
     } else {
@@ -121,9 +144,13 @@ export const ProductDetail = () => {
   }
 
   const handleToggleWishlist = async () => {
-    if (!product) return
+    if (!resolvedProduct) return
 
-    const result = await toggleItem(product._id)
+    const result = await toggleItem(resolvedProduct._id)
+    if (result.requiresAuth) {
+      return
+    }
+
     if (result.success) {
       toast.success(isWishlisted ? 'Removed from wishlist' : 'Added to wishlist')
     } else {
@@ -132,7 +159,7 @@ export const ProductDetail = () => {
   }
 
   const updateQuantity = (delta) => {
-    setQuantity((prev) => Math.max(1, Math.min(prev + delta, product?.quantity || 1)))
+    setQuantity((prev) => Math.max(1, Math.min(prev + delta, resolvedProduct?.quantity || 1)))
   }
 
   if (loading) {
@@ -155,18 +182,26 @@ export const ProductDetail = () => {
     return <ErrorState title="Failed to load product" message={error} />
   }
 
-  if (!product) {
+  if (!resolvedProduct) {
     return <ErrorState title="Product not found" />
   }
 
-  const images = [product.imageCover, ...(product.images || [])]
-  const hasDiscount = product.priceAfterDiscount && product.priceAfterDiscount < product.price
+  const productTitle =
+    typeof resolvedProduct.title === 'string' && resolvedProduct.title.trim()
+      ? resolvedProduct.title.trim()
+      : 'Product'
+  const images = [resolvedProduct.imageCover, ...(resolvedProduct.images || [])].filter(Boolean)
+  const hasDiscount =
+    resolvedProduct.priceAfterDiscount && resolvedProduct.priceAfterDiscount < resolvedProduct.price
 
   return (
     <>
       <Helmet>
-        <title>{product.title || 'Product'} — FreshCart</title>
-        <meta name="description" content={product.description?.slice(0, 155) || 'Product details'} />
+        <title>{`${productTitle} — FreshCart`}</title>
+        <meta
+          name="description"
+          content={resolvedProduct.description?.slice(0, 155) || 'Product details'}
+        />
       </Helmet>
 
       <div className="container-main py-8 pb-32 lg:pb-8">
@@ -181,7 +216,7 @@ export const ProductDetail = () => {
               Products
             </Link>
             <span>/</span>
-            <span className="text-gray-900 dark:text-gray-100">{product.title}</span>
+            <span className="text-gray-900 dark:text-gray-100">{resolvedProduct.title}</span>
           </nav>
         </ScrollReveal>
 
@@ -190,7 +225,7 @@ export const ProductDetail = () => {
           <ScrollReveal>
             <div className="space-y-4">
               {/* Main Image with Zoom */}
-              <ImageZoom src={images[selectedImage]} alt={product.title} />
+              <ImageZoom src={images[selectedImage]} alt={resolvedProduct.title} />
 
               {/* Thumbnail Images */}
               {images.length > 1 && (
@@ -199,7 +234,7 @@ export const ProductDetail = () => {
                     <button
                       key={index}
                       onClick={() => setSelectedImage(index)}
-                      className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-colors ${
+                          className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-colors ${
                         selectedImage === index
                           ? 'border-primary-500'
                           : 'border-gray-200 dark:border-gray-700'
@@ -207,7 +242,7 @@ export const ProductDetail = () => {
                     >
                       <img
                         src={image}
-                        alt={`${product.title} ${index + 1}`}
+                        alt={`${resolvedProduct.title} ${index + 1}`}
                         className="w-full h-full object-cover"
                       />
                     </button>
@@ -222,11 +257,11 @@ export const ProductDetail = () => {
             <div className="space-y-6">
               <div>
                 <h1 className="mb-2 text-3xl font-bold text-gray-900 dark:text-gray-100 break-words" dir="auto">
-                  {product?.title || 'Untitled Product'}
+                  {resolvedProduct.title}
                 </h1>
 
                 {/* Rating */}
-                {product.ratingsAverage && (
+                {resolvedProduct.ratingsAverage > 0 && (
                   <div className="mb-4 flex items-center gap-2">
                     <div className="flex">
                       {Array.from({ length: 5 }).map((_, i) => (
@@ -234,7 +269,7 @@ export const ProductDetail = () => {
                           key={i}
                           size={16}
                           className={`${
-                            i < Math.floor(product.ratingsAverage)
+                            i < Math.floor(resolvedProduct.ratingsAverage)
                               ? 'text-yellow-400 fill-current'
                               : 'text-gray-300'
                           }`}
@@ -242,25 +277,25 @@ export const ProductDetail = () => {
                       ))}
                     </div>
                     <span className="text-sm text-gray-600 dark:text-gray-400">
-                      {product.ratingsAverage.toFixed(1)} ({product.ratingsQuantity || 0} reviews)
+                      {resolvedProduct.ratingsAverage.toFixed(1)} ({resolvedProduct.ratingsQuantity || 0} reviews)
                     </span>
                   </div>
                 )}
 
                 {/* Price */}
                 <div className="mb-4 flex items-center gap-3">
-                  <span className="text-3xl font-bold text-primary-600">
-                    {formatCurrency(hasDiscount ? product.priceAfterDiscount : product.price)}
+                  <span className="text-3xl font-bold text-primary-600" dir="ltr">
+                    {formatCurrency(hasDiscount ? resolvedProduct.priceAfterDiscount : resolvedProduct.price)}
                   </span>
                   {hasDiscount && (
                     <>
-                      <span className="text-lg text-gray-500 line-through">
-                        {formatCurrency(product.price)}
+                      <span className="text-lg text-gray-500 line-through dark:text-gray-400" dir="ltr">
+                        {formatCurrency(resolvedProduct.price)}
                       </span>
                       <span className="rounded-full bg-red-100 px-2 py-1 text-sm font-medium text-red-700 dark:bg-red-900 dark:text-red-300">
                         Save{' '}
                         {Math.round(
-                          ((product.price - product.priceAfterDiscount) / product.price) * 100
+                          ((resolvedProduct.price - resolvedProduct.priceAfterDiscount) / resolvedProduct.price) * 100
                         )}
                         %
                       </span>
@@ -270,15 +305,15 @@ export const ProductDetail = () => {
 
                 {/* Stock Status */}
                 <div className="mb-6">
-                  {product.quantity > 10 ? (
+                  {resolvedProduct.quantity > 10 ? (
                     <span className="inline-flex items-center gap-2 text-green-600 dark:text-green-400">
                       <div className="h-2 w-2 rounded-full bg-green-500" />
-                      In Stock ({product.quantity} available)
+                      In Stock ({resolvedProduct.quantity} available)
                     </span>
-                  ) : product.quantity > 0 ? (
+                  ) : resolvedProduct.quantity > 0 ? (
                     <span className="inline-flex items-center gap-2 text-amber-600 dark:text-amber-400">
                       <div className="h-2 w-2 rounded-full bg-amber-500" />
-                      Only {product.quantity} left in stock
+                      Only {resolvedProduct.quantity} left in stock
                     </span>
                   ) : (
                     <span className="inline-flex items-center gap-2 text-red-600 dark:text-red-400">
@@ -303,7 +338,7 @@ export const ProductDetail = () => {
                   <span className="px-4 py-2 font-medium min-w-[3rem] text-center">{quantity}</span>
                   <button
                     onClick={() => updateQuantity(1)}
-                    disabled={quantity >= (product.quantity || 1)}
+                    disabled={quantity >= (resolvedProduct.quantity || 1)}
                     className="p-2 text-gray-600 hover:text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed dark:text-gray-400 dark:hover:text-gray-100"
                   >
                     <Plus size={16} />
@@ -315,12 +350,12 @@ export const ProductDetail = () => {
               <div className="flex gap-4">
                 <Button
                   onClick={handleAddToCart}
-                  disabled={product.quantity === 0}
+                  disabled={resolvedProduct.quantity === 0}
                   className="flex-1"
                   size="lg"
                 >
                   <ShoppingCart size={18} className="mr-2" />
-                  {product.quantity === 0 ? 'Out of Stock' : 'Add to Cart'}
+                  {resolvedProduct.quantity === 0 ? 'Out of Stock' : 'Add to Cart'}
                 </Button>
 
                 <Button
@@ -357,25 +392,25 @@ export const ProductDetail = () => {
               <div>
                 <h3 className="mb-3 font-semibold text-gray-900 dark:text-gray-100">Description</h3>
                 <p className="text-gray-600 dark:text-gray-400 leading-relaxed break-words" dir="auto">
-                  {product?.description || 'No description available for this product.'}
+                  {resolvedProduct.description || 'No description available for this product.'}
                 </p>
               </div>
 
               {/* Brand & Category */}
               <div className="flex flex-wrap gap-4 text-sm">
-                {product.brand && (
+                {resolvedProduct.brand && (
                   <div>
                     <span className="font-medium text-gray-900 dark:text-gray-100">Brand:</span>
                     <span className="ml-2 text-gray-600 dark:text-gray-400">
-                      {product.brand.name}
+                      {resolvedProduct.brand.name}
                     </span>
                   </div>
                 )}
-                {product.category && (
+                {resolvedProduct.category && (
                   <div>
                     <span className="font-medium text-gray-900 dark:text-gray-100">Category:</span>
                     <span className="ml-2 text-gray-600 dark:text-gray-400">
-                      {product.category.name}
+                      {resolvedProduct.category.name}
                     </span>
                   </div>
                 )}
@@ -387,9 +422,9 @@ export const ProductDetail = () => {
         {/* Reviews Section */}
         <ScrollReveal>
           <ReviewsSection
-            productId={product._id}
-            ratingsAverage={product.ratingsAverage}
-            ratingsQuantity={product.ratingsQuantity}
+            productId={resolvedProduct._id}
+            ratingsAverage={resolvedProduct.ratingsAverage}
+            ratingsQuantity={resolvedProduct.ratingsQuantity}
           />
         </ScrollReveal>
 
@@ -432,7 +467,7 @@ export const ProductDetail = () => {
       {/* Sticky Mobile Add to Cart Bar */}
       <StickyMobileAddToCart
         visible={showStickyBar}
-        product={product}
+        product={resolvedProduct}
         quantity={quantity}
         onQuantityChange={updateQuantity}
         onAddToCart={handleAddToCart}

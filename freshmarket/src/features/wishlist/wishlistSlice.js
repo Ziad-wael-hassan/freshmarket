@@ -1,5 +1,57 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import { wishlistService } from '@/services/wishlistService'
+import { normalizeProduct, unwrapApiData } from '@/utils/apiData'
+
+const extractWishlistItems = (payload) => {
+  const unwrapped = unwrapApiData(payload)
+
+  if (Array.isArray(unwrapped)) {
+    return unwrapped
+  }
+
+  if (Array.isArray(unwrapped?.data)) {
+    return unwrapped.data
+  }
+
+  if (Array.isArray(payload?.data)) {
+    return payload.data
+  }
+
+  return []
+}
+
+const normalizeWishlistItem = (item) => {
+  const productSource = item?.product && typeof item.product === 'object' ? item.product : item
+  const normalizedProduct = normalizeProduct(productSource)
+
+  if (!normalizedProduct?._id) {
+    return null
+  }
+
+  return {
+    ...normalizedProduct,
+    wishlistItemId: item?.wishlistItemId || item?._id || item?.id || normalizedProduct._id,
+  }
+}
+
+const mapWishlistPayload = (payload) => {
+  const items = extractWishlistItems(payload).map(normalizeWishlistItem).filter(Boolean)
+  const itemIds = items.map((item) => item._id).filter(Boolean)
+  const countFromPayload = Number(payload?.count ?? payload?.results)
+
+  return {
+    items,
+    itemIds,
+    count: Number.isFinite(countFromPayload) && countFromPayload >= 0 ? countFromPayload : itemIds.length,
+  }
+}
+
+const applyWishlistState = (state, payload) => {
+  const normalized = mapWishlistPayload(payload)
+  state.items = normalized.items
+  state.itemIds = normalized.itemIds
+  state.count = normalized.count
+}
 
 export const fetchWishlist = createAsyncThunk(
   'wishlist/fetchWishlist',
@@ -15,15 +67,17 @@ export const fetchWishlist = createAsyncThunk(
 
 export const toggleWishlist = createAsyncThunk(
   'wishlist/toggleWishlist',
-  async ({ productId, isWishlisted }, { rejectWithValue }) => {
+  async ({ productId, isWishlisted }, { getState, rejectWithValue }) => {
     try {
       if (isWishlisted) {
-        await wishlistService.remove(productId)
+        const existingItem = getState().wishlist.items.find(
+          (item) => item._id === productId || item.wishlistItemId === productId
+        )
+        await wishlistService.remove(existingItem?.wishlistItemId || productId)
       } else {
         await wishlistService.add(productId)
       }
-      const response = await wishlistService.get()
-      return response.data
+      return { skipRefresh: true }
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to update wishlist')
     }
@@ -55,9 +109,7 @@ const wishlistSlice = createSlice({
       })
       .addCase(fetchWishlist.fulfilled, (state, action) => {
         state.loading = false
-        state.items = action.payload.data || []
-        state.itemIds = action.payload.data?.map((item) => item._id || item) || []
-        state.count = action.payload.count || action.payload.data?.length || 0
+        applyWishlistState(state, action.payload)
       })
       .addCase(fetchWishlist.rejected, (state, action) => {
         state.loading = false
@@ -69,9 +121,20 @@ const wishlistSlice = createSlice({
       })
       .addCase(toggleWishlist.fulfilled, (state, action) => {
         state.loading = false
-        state.items = action.payload.data || []
-        state.itemIds = action.payload.data?.map((item) => item._id || item) || []
-        state.count = action.payload.count || action.payload.data?.length || 0
+        if (action.payload?.skipRefresh) {
+          const toggledId = action.meta.arg.productId
+          const idx = state.itemIds.indexOf(toggledId)
+          if (idx !== -1) {
+            state.items.splice(idx, 1)
+            state.itemIds.splice(idx, 1)
+            state.count = state.itemIds.length
+          } else {
+            state.itemIds.push(toggledId)
+            state.count = state.itemIds.length
+          }
+        } else {
+          applyWishlistState(state, action.payload)
+        }
       })
       .addCase(toggleWishlist.rejected, (state, action) => {
         state.loading = false

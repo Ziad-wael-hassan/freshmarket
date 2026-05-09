@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/Input'
 import { ScrollReveal } from '@/components/common/ScrollReveal'
 import { Lock, Eye, EyeOff, ArrowRight } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { extractErrorMessage } from '@/utils/extractErrorMessage'
 
 const resetPasswordSchema = z
   .object({
@@ -53,7 +54,7 @@ export const ResetPassword = () => {
       toast.success('Password reset successfully!')
       navigate('/login', { replace: true })
     } catch (error) {
-      toast.error(error?.response?.data?.message || 'Failed to reset password')
+      toast.error(extractErrorMessage(error))
     } finally {
       setLoading(false)
     }
@@ -70,7 +71,7 @@ export const ResetPassword = () => {
             This password reset link is invalid or missing required parameters.
           </p>
           <Button asChild>
-            <a href="/forgot-password">Request New Reset Link</a>
+            <Link to="/login">Back to Login</Link>
           </Button>
         </div>
       </div>
@@ -149,9 +150,9 @@ export const ResetPassword = () => {
           </form>
 
           <div className="mt-8 text-center">
-            <a href="/login" className="text-primary-600 hover:text-primary-700 font-medium">
+            <Link to="/login" className="text-primary-600 hover:text-primary-700 font-medium">
               ← Back to Login
-            </a>
+            </Link>
           </div>
         </ScrollReveal>
       </div>

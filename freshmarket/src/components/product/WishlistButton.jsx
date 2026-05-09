@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { Heart, Loader2 } from 'lucide-react'
 import { useWishlist } from '@/hooks/useWishlist'
@@ -9,19 +9,24 @@ export const WishlistButton = ({ productId, className = '' }) => {
   const isWishlisted = isInWishlist(productId)
   const [isLoading, setIsLoading] = useState(false)
   const [isAnimating, setIsAnimating] = useState(false)
+  const pendingRef = useRef(false)
 
   const handleToggle = async (e) => {
     e.preventDefault()
     e.stopPropagation()
 
+    if (pendingRef.current) return
+    pendingRef.current = true
     setIsLoading(true)
+    setIsAnimating(true)
+
     try {
       const result = await toggleItem(productId)
       if (result.requiresAuth) return
-      setIsAnimating(true)
       setTimeout(() => setIsAnimating(false), 500)
     } finally {
       setIsLoading(false)
+      pendingRef.current = false
     }
   }
 

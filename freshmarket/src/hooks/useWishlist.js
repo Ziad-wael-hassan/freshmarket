@@ -79,10 +79,12 @@ export const useWishlist = () => {
     }
 
     try {
-      for (const item of wishlist.items) {
-        const id = item._id || item.id || item
-        await dispatch(toggleWishlist({ productId: id, isWishlisted: true })).unwrap()
-      }
+      const itemsToRemove = wishlist.items.map((item) => item._id || item.id || item)
+      await Promise.all(
+        itemsToRemove.map((id) =>
+          dispatch(toggleWishlist({ productId: id, isWishlisted: true })).unwrap()
+        )
+      )
       return { success: true }
     } catch (error) {
       const message = extractErrorMessage(error)

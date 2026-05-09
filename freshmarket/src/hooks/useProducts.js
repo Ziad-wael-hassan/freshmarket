@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { productService } from '@/services/productService'
-import { getErrorMessage } from '@/utils/getErrorMessage'
+import { extractErrorMessage } from '@/utils/extractErrorMessage'
 
 export const useProducts = (params = {}) => {
   const [products, setProducts] = useState([])
@@ -20,7 +20,7 @@ export const useProducts = (params = {}) => {
         setTotalPages(data.totalPages || 1)
         setTotal(data.total || 0)
       } catch (err) {
-        setError(getErrorMessage(err))
+        setError(extractErrorMessage(err))
       } finally {
         setLoading(false)
       }
