@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import { orderService } from '@/services/orderService'
@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/Button'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { ErrorState } from '@/components/ui/ErrorState'
 import { formatCurrency, formatDate } from '@/utils/formatters'
+import { unwrapApiData } from '@/utils/apiData'
 import { ArrowLeft, Package, CreditCard, MapPin, User as UserIcon, Calendar, CheckCircle2, Truck, Clock } from 'lucide-react'
 
 const statusVariant = {
@@ -26,27 +27,35 @@ const statusIcons = {
   cancelled: Clock,
 }
 
+const getOrderStatus = (order) => {
+  if (order?.status) return order.status
+  if (order?.isDelivered) return 'delivered'
+  if (order?.isPaid) return 'paid'
+  return 'pending'
+}
+
 export const OrderDetail = () => {
   const { id } = useParams()
   const [order, setOrder] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  useEffect(() => {
-    const fetchOrder = async () => {
+  const fetchOrder = useCallback(async () => {
       try {
         setLoading(true)
         setError(null)
         const response = await orderService.getOrder(id)
-        setOrder(response.data?.data || response.data)
+        setOrder(unwrapApiData(response))
       } catch (err) {
         setError(err?.response?.data?.message || 'Failed to load order details')
       } finally {
         setLoading(false)
       }
-    }
+    }, [id])
+
+  useEffect(() => {
     fetchOrder()
-  }, [id])
+  }, [fetchOrder])
 
   if (loading) {
     return (
@@ -71,7 +80,7 @@ export const OrderDetail = () => {
         <ErrorState 
           title="Order not found" 
           message={error} 
-          onRetry={() => window.location.reload()} 
+          onRetry={fetchOrder} 
         />
       </div>
     )
@@ -79,12 +88,14 @@ export const OrderDetail = () => {
 
   if (!order) return null
 
-  const StatusIcon = statusIcons[order.status] || Clock
+  const status = getOrderStatus(order)
+  const StatusIcon = statusIcons[status] || Clock
+  const orderReference = order?._id ? order._id.slice(-8).toUpperCase() : 'Details'
 
   return (
     <>
       <Helmet>
-        <title>Order #{order._id?.slice(-8).toUpperCase()} — FreshCart</title>
+        <title>{`Order #${orderReference} — FreshCart`}</title>
       </Helmet>
 
       <div className="container-main py-12">
@@ -110,8 +121,8 @@ export const OrderDetail = () => {
                       <h1 className="text-3xl font-black text-text-primary tracking-tighter">
                         Order #{order._id?.slice(-8).toUpperCase()}
                       </h1>
-                      <Badge variant={statusVariant[order.status] || 'default'} className="capitalize px-4 py-1">
-                        {order.status || 'Pending'}
+                      <Badge variant={statusVariant[status] || 'default'} className="capitalize px-4 py-1">
+                        {status}
                       </Badge>
                     </div>
                     <div className="flex items-center gap-4 text-sm text-text-secondary font-medium">
@@ -153,13 +164,13 @@ export const OrderDetail = () => {
                           {item.product?.title}
                         </Link>
                         <p className="text-sm text-text-secondary font-medium mt-1">
-                          {item.count || item.quantity} × {formatCurrency(item.price)}
+                          {item.count || item.quantity} × <span dir="ltr">{formatCurrency(item.price)}</span>
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="font-black text-text-primary text-lg">
-                          {formatCurrency((item.count || item.quantity) * item.price)}
-                        </p>
+<span className="font-black text-text-primary text-lg" dir="ltr">
+                            {formatCurrency((item.count || item.quantity) * item.price)}
+                          </span>
                       </div>
                     </div>
                   ))}
@@ -177,9 +188,9 @@ export const OrderDetail = () => {
                 <div className="space-y-4 font-medium">
                   <div className="flex justify-between">
                     <span className="text-text-secondary">Subtotal</span>
-                    <span className="text-text-primary">
-                      {formatCurrency(order.totalOrderPrice || order.totalPrice)}
-                    </span>
+<span className="text-text-primary" dir="ltr">
+                          {formatCurrency(order.totalOrderPrice || order.totalPrice)}
+                        </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-text-secondary">Shipping</span>
@@ -188,7 +199,7 @@ export const OrderDetail = () => {
                   {order.discount > 0 && (
                     <div className="flex justify-between text-red-500">
                       <span>Discount</span>
-                      <span>-{formatCurrency(order.discount)}</span>
+                      <span dir="ltr">-{formatCurrency(order.discount)}</span>
                     </div>
                   )}
                   
@@ -196,9 +207,9 @@ export const OrderDetail = () => {
                     <div className="flex justify-between items-end">
                       <div>
                         <p className="text-xs font-bold text-text-secondary uppercase tracking-widest mb-1 opacity-60">Total Paid</p>
-                        <p className="text-4xl font-black text-text-primary tracking-tighter">
+                        <span className="font-black text-text-primary tracking-tighter" dir="ltr">
                           {formatCurrency(order.totalOrderPrice || order.totalPrice)}
-                        </p>
+                        </span>
                       </div>
                     </div>
                   </div>

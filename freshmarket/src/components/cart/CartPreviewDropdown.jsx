@@ -10,10 +10,10 @@ export const CartPreviewDropdown = ({ isOpen, onClose }) => {
   const { items, removeItem, totalPrice, totalItems } = useCart()
   const ref = useClickOutside(onClose, isOpen)
 
-  const handleRemove = async (productId, e) => {
+  const handleRemove = async (item, e) => {
     e.preventDefault()
     e.stopPropagation()
-    const result = await removeItem(productId)
+    const result = await removeItem(item)
     if (result.success) {
       toast.success('Item removed')
     }
@@ -61,12 +61,12 @@ export const CartPreviewDropdown = ({ isOpen, onClose }) => {
                       <p className="truncate text-sm font-medium text-gray-900 dark:text-gray-100">
                         {item.product.title}
                       </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                      <p className="text-xs text-gray-500 dark:text-gray-400" dir="ltr">
                         {item.count} × {formatCurrency(item.price)}
                       </p>
                     </div>
                     <button
-                      onClick={(e) => handleRemove(item.product._id, e)}
+                      onClick={(e) => handleRemove(item, e)}
                       className="flex-shrink-0 rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900 dark:hover:text-red-400"
                     >
                       <Trash2 size={14} />
@@ -86,7 +86,7 @@ export const CartPreviewDropdown = ({ isOpen, onClose }) => {
             <div className="border-t border-gray-200 p-4 dark:border-gray-700">
               <div className="mb-3 flex items-center justify-between text-sm">
                 <span className="font-medium text-gray-900 dark:text-gray-100">Total</span>
-                <span className="font-semibold text-primary-600">{formatCurrency(totalPrice)}</span>
+                <span className="font-semibold text-primary-600" dir="ltr">{formatCurrency(totalPrice)}</span>
               </div>
               <div className="space-y-2">
                 <Link
@@ -97,11 +97,11 @@ export const CartPreviewDropdown = ({ isOpen, onClose }) => {
                   View Cart
                 </Link>
                 <Link
-                  to="/checkout"
+                  to="/cart"
                   onClick={onClose}
                   className="block w-full rounded-lg border border-gray-300 py-2 text-center text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
                 >
-                  Checkout
+                  View Cart
                 </Link>
               </div>
             </div>

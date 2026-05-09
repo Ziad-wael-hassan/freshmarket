@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useCart } from '@/hooks/useCart'
@@ -9,8 +10,9 @@ import toast from 'react-hot-toast'
 export const CartDrawer = ({ isOpen, onClose }) => {
   const { items, updateItem, removeItem, clearCart, totalItems, totalPrice } = useCart()
 
-  const handleUpdateQuantity = async (productId, newQuantity) => {
+  const handleUpdateQuantity = async (item, newQuantity) => {
     if (newQuantity < 1) return
+    const productId = item.productId || item._id
 
     const result = await updateItem(productId, newQuantity)
     if (!result.success) {
@@ -19,7 +21,8 @@ export const CartDrawer = ({ isOpen, onClose }) => {
   }
 
   const handleRemoveItem = async (item) => {
-    const result = await removeItem(item)
+    const productId = item.productId || item._id
+    const result = await removeItem(productId)
     if (result.success) {
       toast.success('Item removed from cart')
     } else {
@@ -36,7 +39,7 @@ export const CartDrawer = ({ isOpen, onClose }) => {
     }
   }
 
-  return (
+  return createPortal(
     <AnimatePresence>
       {isOpen && (
         <>
@@ -45,20 +48,20 @@ export const CartDrawer = ({ isOpen, onClose }) => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[1090] bg-black/55 backdrop-blur-[1.5px]"
+            className="fixed inset-0 z-[1090] bg-black/60 backdrop-blur-sm"
             onClick={onClose}
           />
 
-          {/* Drawer */}
+          {/* Drawer Panel */}
           <motion.div
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'tween', duration: 0.3 }}
-            className="fixed right-0 top-0 z-[1100] flex h-full w-full md:max-w-md flex-col bg-card shadow-2xl dark:bg-[#161b27]"
+            className="fixed inset-y-0 right-0 z-[1100] flex w-full flex-col overflow-hidden border-l border-border-custom bg-card shadow-2xl dark:bg-[#161b27] md:max-w-md"
           >
-            {/* Header */}
-            <div className="flex items-center justify-between border-b border-border-custom p-6">
+            {/* Header - fixed height */}
+            <div className="flex shrink-0 items-center justify-between border-b border-border-custom p-6">
               <div className="flex items-center gap-3">
                 <ShoppingCart className="h-6 w-6 text-primary-600" />
                 <h2 className="text-lg font-semibold text-text-primary">
@@ -73,8 +76,8 @@ export const CartDrawer = ({ isOpen, onClose }) => {
               </button>
             </div>
 
-            {/* Cart Items */}
-            <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 py-3 space-y-3 min-h-0">
+            {/* Items - scrolls independently */}
+            <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-4 py-3">
               {items.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 text-center">
                   <ShoppingBag className="mb-4 h-16 w-16 text-text-secondary/40" />
@@ -92,7 +95,7 @@ export const CartDrawer = ({ isOpen, onClose }) => {
                 <div className="space-y-4">
                   {items.map((item) => (
                     <motion.div
-                      key={item._id}
+                      key={item._id || item.productId}
                       layout
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -102,8 +105,8 @@ export const CartDrawer = ({ isOpen, onClose }) => {
                       {/* Product Image */}
                       <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-muted">
                         <img
-                          src={item.product.imageCover}
-                          alt={item.product.title}
+                          src={item?.image || '/placeholder-product.png'}
+                          alt={item?.title || 'Product'}
                           className="h-full w-full object-cover"
                         />
                       </div>
@@ -111,39 +114,33 @@ export const CartDrawer = ({ isOpen, onClose }) => {
                       {/* Product Details */}
                       <div className="flex-1 min-w-0">
                         <Link
-                          to={`/products/${item.product._id}`}
+                          to={`/products/${item?.productId || item?._id}`}
                           onClick={onClose}
                           className="block"
                         >
                           <h4 className="truncate text-sm font-medium text-text-primary hover:text-primary-600">
-                            {item.product.title}
+                            {item?.title || 'Untitled Product'}
                           </h4>
                         </Link>
 
                         <div className="mt-1 flex items-center gap-2">
                           <span className="text-sm font-medium text-primary-600" dir="ltr">
-                            {formatCurrency(item.price)}
+                            {formatCurrency(item?.price || 0)}
                           </span>
-                          {item.product.priceAfterDiscount && (
-                            <span className="text-xs text-gray-500 line-through dark:text-gray-400" dir="ltr">
-                              {formatCurrency(item.product.price)}
-                            </span>
-                          )}
                         </div>
 
                         {/* Quantity Controls */}
                         <div className="mt-2 flex items-center gap-2">
                           <button
-                            onClick={() => handleUpdateQuantity(item, item.count - 1)}
+                            onClick={() => handleUpdateQuantity(item, (item.quantity || item.count || 1) - 1)}
                             className="flex h-6 w-6 items-center justify-center rounded border border-border-custom text-text-secondary hover:bg-muted"
                           >
                             <Minus size={12} />
                           </button>
-                          <span className="w-8 text-center text-sm font-medium">{item.count}</span>
+                          <span className="w-8 text-center text-sm font-medium">{item.quantity || item.count || 0}</span>
                           <button
-                            onClick={() => handleUpdateQuantity(item, item.count + 1)}
-                            disabled={item.count >= item.product.quantity}
-                            className="flex h-6 w-6 items-center justify-center rounded border border-border-custom text-text-secondary hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
+                            onClick={() => handleUpdateQuantity(item, (item.quantity || item.count || 0) + 1)}
+                            className="flex h-6 w-6 items-center justify-center rounded border border-border-custom text-text-secondary hover:bg-muted"
                           >
                             <Plus size={12} />
                           </button>
@@ -163,7 +160,7 @@ export const CartDrawer = ({ isOpen, onClose }) => {
               )}
             </div>
 
-            {/* Footer */}
+            {/* Footer - fixed height, always visible */}
             {items.length > 0 && (
               <div className="shrink-0 border-t border-border-custom p-6">
                 <div className="mb-4 flex items-center justify-between text-lg font-semibold">
@@ -187,6 +184,8 @@ export const CartDrawer = ({ isOpen, onClose }) => {
           </motion.div>
         </>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   )
+
 }

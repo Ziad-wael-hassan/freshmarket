@@ -1,17 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import { motion } from 'framer-motion'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { Mail, Lock, Eye, EyeOff } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
-import { Button } from '@/components/ui/Button'
-import { Input } from '@/components/ui/Input'
-import { loginSchema } from '@/validations/auth'
 
 const GoogleIcon = () => (
-  <svg viewBox="0 0 24 24" className="w-5 h-5 mr-3">
+  <svg viewBox="0 0 24 24" className="w-6 h-6 mr-3">
     <path
       fill="#4285F4"
       d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -34,22 +28,8 @@ const GoogleIcon = () => (
 const Login = () => {
   const navigate = useNavigate()
   const location = useLocation()
-  const { login, loginWithGoogle, isAuthenticated, isLoading, authInitialized } = useAuth()
-  const [isLoggingInWithGoogle, setIsLoggingInWithGoogle] = useState(false)
-  const [showPassword, setShowPassword] = useState(false)
+  const { loginWithGoogle, isAuthenticated, isLoading, authInitialized } = useAuth()
   const returnUrl = location.state?.returnUrl || '/'
-
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm({
-    resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: '',
-      password: '',
-    },
-  })
 
   useEffect(() => {
     if (authInitialized && isAuthenticated) {
@@ -57,14 +37,9 @@ const Login = () => {
     }
   }, [authInitialized, isAuthenticated, navigate, returnUrl])
 
-  const onSubmit = async (data) => {
-    await login(data, returnUrl)
-  }
-
-  const handleGoogleLogin = async () => {
-    setIsLoggingInWithGoogle(true)
+  const handleGoogleLogin = async (e) => {
+    if (e) e.preventDefault()
     await loginWithGoogle()
-    setIsLoggingInWithGoogle(false)
   }
 
   return (
@@ -73,106 +48,74 @@ const Login = () => {
         <title>Login — FreshCart</title>
       </Helmet>
 
-      <div className="flex min-h-[calc(100vh-200px)] items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative">
+      <div className="flex min-h-[calc(100vh-160px)] items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+        {/* Cinematic Background Elements */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary-500/20 blur-[120px] rounded-full pointer-events-none z-0" />
+        <div className="absolute top-1/4 left-1/4 w-[300px] h-[300px] bg-emerald-500/10 blur-[80px] rounded-full pointer-events-none z-0 animate-pulse" />
+        
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-md space-y-8 rounded-2xl bg-elevated p-8 shadow-2xl border border-border-custom relative overflow-hidden"
+          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          className="w-full max-w-lg space-y-10 rounded-[2.5rem] bg-surface/40 backdrop-blur-2xl p-10 md:p-14 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.6)] border border-white/10 relative z-10"
         >
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-primary-500/10 blur-[60px] rounded-full pointer-events-none" />
-
-          <div className="text-center relative z-10">
-            <Link to="/" className="inline-block mb-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-500 text-2xl font-bold text-white mx-auto shadow-lg shadow-primary-500/30">
-                F
-              </div>
-            </Link>
-            <h2 className="text-3xl font-bold tracking-tight text-text-primary">Welcome back</h2>
-            <p className="mt-2 text-sm text-text-secondary">
-              Sign in with your FreshCart account to access orders, profile, wishlist, and checkout.
-            </p>
+          {/* Noise overlay for the card */}
+          <div className="absolute inset-0 rounded-[2.5rem] overflow-hidden pointer-events-none opacity-[0.03] mix-blend-overlay">
+            <svg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg' className="w-full h-full">
+              <filter id='noiseFilterCard'>
+                <feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/>
+              </filter>
+              <rect width='100%' height='100%' filter='url(#noiseFilterCard)'/>
+            </svg>
           </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 relative z-10">
-            <div>
-              <label className="mb-2 block text-sm font-medium text-text-primary">Email address</label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
-                <Input
-                  {...register('email')}
-                  type="email"
-                  placeholder="Enter your email"
-                  className="pl-10"
-                  error={errors.email?.message}
-                />
-              </div>
-            </div>
-
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="block text-sm font-medium text-text-primary">Password</label>
-                <Link to="/forgot-password" className="text-xs text-primary-500 hover:text-primary-600 font-medium">
-                  Forgot Password?
-                </Link>
-              </div>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
-                <Input
-                  {...register('password')}
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="Enter your password"
-                  className="pl-10 pr-10"
-                  error={errors.password?.message}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((prev) => !prev)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  tabIndex={-1}
-                >
-                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                </button>
-              </div>
-            </div>
-
-            <Button type="submit" className="w-full" size="lg" loading={isLoading}>
-              Sign In
-            </Button>
-          </form>
-
-          <div className="relative z-10">
-            <div className="flex items-center gap-3 text-xs uppercase tracking-[0.2em] text-text-secondary/70">
-              <span className="h-px flex-1 bg-border-custom" />
-              <span>or</span>
-              <span className="h-px flex-1 bg-border-custom" />
-            </div>
-
-            <div className="mt-5 space-y-4">
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={handleGoogleLogin}
-                disabled={isLoggingInWithGoogle}
-                className="group relative flex w-full justify-center items-center rounded-xl border border-border-custom bg-surface px-4 py-3 text-sm font-medium text-text-primary hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+          <div className="text-center space-y-6">
+            <Link to="/" className="inline-block">
+              <motion.div 
+                whileHover={{ scale: 1.05, rotate: 5 }}
+                whileTap={{ scale: 0.95 }}
+                className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary-400 to-primary-600 text-3xl font-black text-white mx-auto shadow-[0_8px_32px_rgba(60,181,80,0.4)]"
               >
-                {isLoggingInWithGoogle ? (
-                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary-500 border-t-transparent" />
-                ) : (
-                  <>
-                    <GoogleIcon />
-                    Continue with Google
-                  </>
-                )}
-              </motion.button>
-
-              <p className="text-center text-xs text-text-secondary">
-                Google sign-in is preserved for identity, but it does not grant protected API access until a backend token exchange exists.
+                F
+              </motion.div>
+            </Link>
+            
+            <div className="space-y-2">
+              <h2 className="text-4xl font-extrabold tracking-tight text-text-primary">Welcome back</h2>
+              <p className="text-base text-text-secondary font-medium opacity-80">
+                Experience the future of fresh groceries.
               </p>
             </div>
           </div>
 
-          <div className="text-center text-xs text-text-secondary mt-2 relative z-10">
-            By continuing, you agree to our Terms of Service and Privacy Policy.
+          <div className="space-y-6">
+            <motion.button
+              whileHover={{ scale: 1.02, translateY: -2 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={handleGoogleLogin}
+              disabled={isLoading}
+              className="group relative flex h-[56px] w-full justify-center items-center rounded-2xl border border-white/10 bg-white/5 px-6 text-lg font-semibold text-white transition-all duration-500 hover:bg-white/10 hover:border-primary-500/50 hover:shadow-[0_0_40px_rgba(60,181,80,0.2)] disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isLoading ? (
+                <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary-500 border-t-transparent" />
+              ) : (
+                <>
+                  <GoogleIcon />
+                  Continue with Google
+                </>
+              )}
+            </motion.button>
+
+            <p className="text-center text-sm text-text-secondary/60 font-medium px-4">
+              Join thousands of shoppers enjoying premium delivery and exclusive local deals.
+            </p>
+          </div>
+
+          <div className="pt-4 text-center border-t border-white/5">
+            <p className="text-xs text-text-secondary/40 font-medium uppercase tracking-widest leading-relaxed">
+              By continuing, you agree to our <br/>
+              <Link to="/terms" className="hover:text-primary-400 transition-colors">Terms of Service</Link> & <Link to="/privacy" className="hover:text-primary-400 transition-colors">Privacy Policy</Link>
+            </p>
           </div>
         </motion.div>
       </div>

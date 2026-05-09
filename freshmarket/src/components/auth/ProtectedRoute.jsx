@@ -41,9 +41,6 @@ export const ProtectedRoute = ({ children }) => {
 
   // Auth initialized and not loading - check authentication
   if (!isAuthenticated) {
-    if (import.meta.env.DEV) {
-      console.log('[ProtectedRoute] Not authenticated, redirecting to login')
-    }
     return <Navigate to="/login" state={{ returnUrl: location.pathname }} replace />
   }
 

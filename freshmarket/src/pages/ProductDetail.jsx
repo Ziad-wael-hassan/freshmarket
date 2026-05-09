@@ -25,6 +25,8 @@ import {
   Truck,
   Shield,
   RotateCcw,
+  Minus as MinusIcon,
+  Plus as PlusIcon,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 
@@ -146,7 +148,7 @@ export const ProductDetail = () => {
   const handleToggleWishlist = async () => {
     if (!resolvedProduct) return
 
-    const result = await toggleItem(resolvedProduct._id)
+    const result = await toggleItem(resolvedProduct)
     if (result.requiresAuth) {
       return
     }
@@ -333,7 +335,7 @@ export const ProductDetail = () => {
                     disabled={quantity <= 1}
                     className="p-2 text-gray-600 hover:text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed dark:text-gray-400 dark:hover:text-gray-100"
                   >
-                    <Minus size={16} />
+                    <MinusIcon size={16} />
                   </button>
                   <span className="px-4 py-2 font-medium min-w-[3rem] text-center">{quantity}</span>
                   <button
@@ -341,7 +343,7 @@ export const ProductDetail = () => {
                     disabled={quantity >= (resolvedProduct.quantity || 1)}
                     className="p-2 text-gray-600 hover:text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed dark:text-gray-400 dark:hover:text-gray-100"
                   >
-                    <Plus size={16} />
+                    <PlusIcon size={16} />
                   </button>
                 </div>
               </div>

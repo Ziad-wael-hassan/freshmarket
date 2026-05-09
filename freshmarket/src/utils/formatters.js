@@ -2,13 +2,14 @@
  * Format number as currency
  * @param {number} value - Value to format
  * @param {string} currency - Currency code (default: 'EGP')
- * @param {string} locale - Locale string (default: 'ar-EG')
  * @returns {string} Formatted currency string
  */
-export const formatCurrency = (value, currency = 'EGP', locale = 'ar-EG') => {
-  return new Intl.NumberFormat(locale, {
+export const formatCurrency = (value, currency = 'EGP') => {
+  return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   }).format(value)
 }
 

@@ -1,37 +1,59 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
 import { productService } from '@/services/productService'
 import { ProductCard, ProductCardSkeleton } from '@/components/product/ProductCard'
 import { ScrollReveal } from '@/components/common/ScrollReveal'
+import { useRecentlyViewed } from '@/hooks/useRecentlyViewed'
+import { normalizeProduct } from '@/utils/apiData'
 
 export const RecentlyViewedProducts = () => {
+  const { recentIds } = useRecentlyViewed()
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    let isMounted = true
+
     const fetchRecent = async () => {
       try {
-        const stored = localStorage.getItem('recentlyViewed')
-        const ids = stored ? JSON.parse(stored) : []
-        if (ids.length === 0) {
-          setLoading(false)
+        if (recentIds.length === 0) {
+          if (isMounted) {
+            setProducts([])
+            setLoading(false)
+          }
           return
         }
 
-        const promises = ids.slice(0, 4).map((id) =>
-          productService.getById(id).catch(() => null)
-        )
+        if (isMounted) {
+          setLoading(true)
+        }
+
+        const promises = recentIds.slice(0, 4).map((id) => productService.getById(id).catch(() => null))
         const results = await Promise.all(promises)
-        setProducts(results.filter(Boolean).map((r) => r.data))
+        const normalizedProducts = results
+          .filter(Boolean)
+          .map((response) => normalizeProduct(response))
+          .filter(Boolean)
+
+        if (isMounted) {
+          setProducts(normalizedProducts)
+        }
       } catch {
-        setProducts([])
+        if (isMounted) {
+          setProducts([])
+        }
       } finally {
-        setLoading(false)
+        if (isMounted) {
+          setLoading(false)
+        }
       }
     }
 
     fetchRecent()
-  }, [])
+
+    return () => {
+      isMounted = false
+    }
+  }, [recentIds])
 
   if (!loading && products.length === 0) return null
 

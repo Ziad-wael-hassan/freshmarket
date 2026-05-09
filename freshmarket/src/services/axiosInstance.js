@@ -18,11 +18,6 @@ const axiosInstance = axios.create({
  * These are public endpoints that work for guest users
  */
 const ignored401Endpoints = [
-  API.AUTH.SIGNIN,
-  API.AUTH.SIGNUP,
-  API.AUTH.FORGOT_PASSWORD,
-  API.AUTH.VERIFY_RESET_CODE,
-  API.AUTH.RESET_PASSWORD,
   API.PRODUCTS.LIST,
   API.CATEGORIES.LIST,
   API.BRANDS.LIST,
@@ -100,7 +95,7 @@ axiosInstance.interceptors.response.use(
       // Reset flag after a delay to allow subsequent unauthorized events
       setTimeout(() => {
         isHandlingUnauthorized = false
-      }, 1000)
+      }, 3000)
 
       return Promise.reject(error)
     }

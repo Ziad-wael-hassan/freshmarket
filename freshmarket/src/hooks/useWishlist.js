@@ -37,14 +37,32 @@ export const useWishlist = () => {
   }, [isAuthenticated, location.pathname, location.search, navigate])
 
   const toggleItem = useCallback(
-    async (productId) => {
+    async (productOrId) => {
       if (!requireAuthenticatedWishlist()) {
         return { success: false, requiresAuth: true }
       }
 
+      const product = typeof productOrId === 'object' ? productOrId : null
+      const productId = product?._id || productOrId
+      
       const isWishlisted = wishlist.itemIds.includes(productId)
+      
       try {
-        await dispatch(toggleWishlist({ productId, isWishlisted })).unwrap()
+        const wishlistPayload = {
+          productId,
+          isWishlisted,
+          product: product ? {
+            productId: product._id,
+            title: product.title,
+            image: product.imageCover,
+            price: product.priceAfterDiscount || product.price,
+            category: product.category?.name,
+            brand: product.brand?.name,
+            ratingsAverage: product.ratingsAverage
+          } : null
+        }
+        
+        await dispatch(toggleWishlist(wishlistPayload)).unwrap()
         return { success: true }
       } catch (error) {
         const message = extractErrorMessage(error)

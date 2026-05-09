@@ -12,9 +12,9 @@ export const fetchCart = createAsyncThunk('cart/fetchCart', async (_, { rejectWi
 
 export const addToCart = createAsyncThunk(
   'cart/addToCart',
-  async (productId, { rejectWithValue }) => {
+  async (product, { rejectWithValue }) => {
     try {
-      const response = await cartService.add(productId)
+      const response = await cartService.add(product)
       return response.data
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to add item to cart')
@@ -24,11 +24,20 @@ export const addToCart = createAsyncThunk(
 
 export const updateCartItem = createAsyncThunk(
   'cart/updateCartItem',
-  async ({ productId, count }, { rejectWithValue }) => {
+  async ({ cartItemId, fallbackId, count }, { rejectWithValue }) => {
     try {
-      const response = await cartService.updateQuantity(productId, count)
+      const response = await cartService.updateQuantity(cartItemId, count)
       return response.data
     } catch (error) {
+      if (fallbackId && fallbackId !== cartItemId) {
+        try {
+          const fallbackResponse = await cartService.updateQuantity(fallbackId, count)
+          return fallbackResponse.data
+        } catch {
+          // Fall through to the original error when both identifiers fail.
+        }
+      }
+
       return rejectWithValue(error.response?.data?.message || 'Failed to update cart item')
     }
   }
@@ -36,11 +45,20 @@ export const updateCartItem = createAsyncThunk(
 
 export const removeFromCart = createAsyncThunk(
   'cart/removeFromCart',
-  async (productId, { rejectWithValue }) => {
+  async ({ cartItemId, fallbackId }, { rejectWithValue }) => {
     try {
-      const response = await cartService.remove(productId)
+      const response = await cartService.remove(cartItemId)
       return response.data
     } catch (error) {
+      if (fallbackId && fallbackId !== cartItemId) {
+        try {
+          const fallbackResponse = await cartService.remove(fallbackId)
+          return fallbackResponse.data
+        } catch {
+          // Fall through to the original error when both identifiers fail.
+        }
+      }
+
       return rejectWithValue(error.response?.data?.message || 'Failed to remove item from cart')
     }
   }

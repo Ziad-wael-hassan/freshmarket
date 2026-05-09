@@ -251,7 +251,7 @@ export const Checkout = () => {
                         <p className="truncate text-sm font-medium text-gray-900 dark:text-gray-100">
                           {item.product?.title}
                         </p>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                        <p className="text-sm text-gray-600 dark:text-gray-400" dir="ltr">
                           Qty: {item.count} × {formatCurrency(item.price)}
                         </p>
                       </div>
@@ -275,7 +275,7 @@ export const Checkout = () => {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600 dark:text-gray-400">Subtotal</span>
-                    <span className="font-medium text-gray-900 dark:text-gray-100">
+                    <span className="font-medium text-gray-900 dark:text-gray-100" dir="ltr">
                       {formatCurrency(totalPrice)}
                     </span>
                   </div>
@@ -289,7 +289,7 @@ export const Checkout = () => {
 
                 <div className="flex justify-between text-lg font-semibold">
                   <span className="text-gray-900 dark:text-gray-100">Total</span>
-                  <span className="text-primary-600">{formatCurrency(totalPrice)}</span>
+                  <span className="text-primary-600" dir="ltr">{formatCurrency(totalPrice)}</span>
                 </div>
 
                 <Button

@@ -22,7 +22,7 @@ class ErrorBoundary extends React.Component {
       timestamp: new Date().toISOString(),
     }
 
-    if (process.env.NODE_ENV === 'development') {
+    if (import.meta.env.DEV) {
       console.group('%c🔴 ErrorBoundary Caught Error', 'color: #ef4444; font-weight: bold;')
       console.error('Error Details:', errorDetails)
       console.error('Full Error:', error)
@@ -39,7 +39,7 @@ class ErrorBoundary extends React.Component {
 
   render() {
     if (this.state.hasError) {
-      const isDev = process.env.NODE_ENV === 'development'
+      const isDev = import.meta.env.DEV
       
       return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">

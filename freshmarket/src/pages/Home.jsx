@@ -1,5 +1,5 @@
 import { Helmet } from 'react-helmet-async'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { ScrollReveal } from '@/components/common/ScrollReveal'
 import { Button } from '@/components/ui/Button'
@@ -7,7 +7,7 @@ import { ProductCard, ProductCardSkeleton } from '@/components/product/ProductCa
 import { useState, useEffect } from 'react'
 import { productService } from '@/services/productService'
 import { useFilters } from '@/context/FilterContext'
-import { getErrorMessage } from '@/utils/getErrorMessage'
+import { normalizeProduct, unwrapApiCollection } from '@/utils/apiData'
 import Hero from '@/components/home/Hero'
 import { BrandsRow } from '@/components/home/BrandsRow'
 import { Testimonials } from '@/components/home/Testimonials'
@@ -15,26 +15,40 @@ import { HomeCTA } from '@/components/home/HomeCTA'
 import { Star, Truck, Shield, Headphones, ArrowRight } from 'lucide-react'
 
 export const Home = () => {
-  const navigate = useNavigate()
   const { activeCategories } = useFilters()
   const [featuredProducts, setFeaturedProducts] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    let isMounted = true
+
     const fetchData = async () => {
       try {
         setLoading(true)
         const productsRes = await productService.getAll({ limit: 8 })
-        const products = productsRes.data?.data || productsRes.data || []
-        setFeaturedProducts(products)
-      } catch (error) {
-        console.error('Failed to fetch home data:', error)
+        const products = unwrapApiCollection(productsRes)
+          .map((product) => normalizeProduct(product))
+          .filter(Boolean)
+
+        if (isMounted) {
+          setFeaturedProducts(products)
+        }
+      } catch {
+        if (isMounted) {
+          setFeaturedProducts([])
+        }
       } finally {
-        setLoading(false)
+        if (isMounted) {
+          setLoading(false)
+        }
       }
     }
 
     fetchData()
+
+    return () => {
+      isMounted = false
+    }
   }, [])
 
   const features = [
@@ -136,7 +150,7 @@ export const Home = () => {
                 ))
               : activeCategories.slice(0, 6).map((category, index) => (
                   <ScrollReveal key={category._id} delay={index * 0.1}>
-                    <Link to={`/categories/${category._id}`}>
+                    <Link to={`/products?category=${category._id}`}>
                       <motion.div
                         whileHover={{ scale: 1.05 }}
                         className="group aspect-square overflow-hidden rounded-xl bg-white shadow-sm transition-all hover:shadow-md dark:bg-gray-800"

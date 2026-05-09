@@ -4,13 +4,14 @@ import { WishlistButton } from './WishlistButton'
 import { useState } from 'react'
 import { QuickViewModal } from './QuickViewModal'
 
-export const ProductCardActions = ({ productId }) => {
+export const ProductCardActions = ({ product, productId }) => {
   const [showQuickView, setShowQuickView] = useState(false)
+  const id = productId || product?._id
 
   return (
     <>
       <div className="absolute top-3 right-3 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-2 group-hover:translate-x-0">
-        <WishlistButton productId={productId} />
+        <WishlistButton product={product} productId={id} />
         
         <motion.button
           whileHover={{ scale: 1.1 }}
@@ -29,7 +30,7 @@ export const ProductCardActions = ({ productId }) => {
       <QuickViewModal
         isOpen={showQuickView}
         onClose={() => setShowQuickView(false)}
-        productId={productId}
+        productId={id}
       />
     </>
   )

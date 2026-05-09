@@ -20,9 +20,6 @@ const Orders = lazy(() => import('./pages/Orders'))
 const OrderDetail = lazy(() => import('./pages/OrderDetail'))
 const Profile = lazy(() => import('./pages/Profile'))
 const Login = lazy(() => import('./pages/auth/Login'))
-const Register = lazy(() => import('./pages/auth/Register'))
-const ForgotPassword = lazy(() => import('./pages/auth/ForgotPassword'))
-const ResetPassword = lazy(() => import('./pages/auth/ResetPassword'))
 const Support = lazy(() => import('./pages/Support'))
 const Help = lazy(() => import('./pages/Help'))
 const Contact = lazy(() => import('./pages/Contact'))
@@ -125,30 +122,7 @@ export default function App() {
               </GuestRoute>
             }
           />
-          <Route
-            path="register"
-            element={
-              <GuestRoute>
-                <Register />
-              </GuestRoute>
-            }
-          />
-          <Route
-            path="forgot-password"
-            element={
-              <GuestRoute>
-                <ForgotPassword />
-              </GuestRoute>
-            }
-          />
-          <Route
-            path="reset-password"
-            element={
-              <GuestRoute>
-                <ResetPassword />
-              </GuestRoute>
-            }
-          />
+
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>

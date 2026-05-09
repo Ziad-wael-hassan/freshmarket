@@ -10,6 +10,7 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import { ErrorState } from '@/components/ui/ErrorState'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { formatCurrency, formatDate } from '@/utils/formatters'
+import { unwrapApiCollection } from '@/utils/apiData'
 import { Package, ShoppingBag, ChevronRight } from 'lucide-react'
 
 const statusVariant = {
@@ -18,6 +19,13 @@ const statusVariant = {
   placed: 'info',
   delivered: 'success',
   cancelled: 'error',
+}
+
+const getOrderStatus = (order) => {
+  if (order.status) return order.status
+  if (order.isDelivered) return 'delivered'
+  if (order.isPaid) return 'paid'
+  return 'pending'
 }
 
 export const Orders = () => {
@@ -31,9 +39,8 @@ export const Orders = () => {
       setLoading(true)
       setError(null)
       const response = await orderService.getUserOrders(user._id)
-      setOrders(response.data?.data || response.data || [])
-    } catch (err) {
-      console.error('Failed to fetch orders:', err)
+      setOrders(unwrapApiCollection(response))
+    } catch {
       setError('Unable to load your orders. Please try again later.')
     } finally {
       setLoading(false)
@@ -109,7 +116,10 @@ export const Orders = () => {
           </div>
         ) : (
           <div className="grid gap-6">
-            {orders.map((order, index) => (
+            {orders.map((order, index) => {
+              const status = getOrderStatus(order)
+
+              return (
               <ScrollReveal key={order._id} delay={index * 0.05}>
                 <Link
                   to={`/orders/${order._id}`}
@@ -125,8 +135,8 @@ export const Orders = () => {
                           <p className="text-lg font-bold text-text-primary">
                             Order #{order._id?.slice(-8).toUpperCase()}
                           </p>
-                          <Badge variant={statusVariant[order.status] || 'default'} className="capitalize">
-                            {order.status || 'Pending'}
+                          <Badge variant={statusVariant[status] || 'default'} className="capitalize">
+                            {status}
                           </Badge>
                         </div>
                         <p className="text-sm text-text-secondary flex items-center gap-2">
@@ -140,8 +150,8 @@ export const Orders = () => {
                     <div className="flex items-center justify-between md:justify-end gap-8 border-t md:border-t-0 border-border-custom pt-4 md:pt-0">
                       <div className="md:text-right">
                         <p className="text-xs text-text-secondary uppercase tracking-wider font-semibold mb-1">Total Amount</p>
-                        <p className="text-xl font-black text-text-primary">
-                          {formatCurrency(order.totalOrderPrice || order.totalPrice)}
+<p className="text-xl font-black text-text-primary" dir="ltr">
+                           {formatCurrency(order.totalOrderPrice || order.totalPrice)}
                         </p>
                       </div>
                       <div className="h-10 w-10 flex items-center justify-center rounded-full bg-muted text-text-secondary group-hover:bg-primary-500 group-hover:text-white transition-all duration-300">
@@ -151,7 +161,8 @@ export const Orders = () => {
                   </div>
                 </Link>
               </ScrollReveal>
-            ))}
+              )
+            })}
           </div>
         )}
       </div>

@@ -89,19 +89,24 @@ export const useCart = () => {
         return { success: true }
       }
 
-      const productId =
-        typeof productOrId === 'string' ? productOrId : normalizeProduct(productOrId)?._id
-
-      if (!productId) {
+      const product = normalizeProduct(productOrId)
+      if (!product?._id) {
         return { success: false, error: 'Missing product identifier.' }
+      }
+
+      const cartPayload = {
+        productId: product._id,
+        title: product.title,
+        image: product.imageCover,
+        price: product.priceAfterDiscount || product.price
       }
 
       try {
         if (requestedQuantity === 1) {
-          await dispatch(addToCart(productId)).unwrap()
+          await dispatch(addToCart(cartPayload)).unwrap()
         } else {
           await Promise.all(
-            Array.from({ length: requestedQuantity }, () => dispatch(addToCart(productId)).unwrap())
+            Array.from({ length: requestedQuantity }, () => dispatch(addToCart(cartPayload)).unwrap())
           )
         }
 

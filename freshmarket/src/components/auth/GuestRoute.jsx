@@ -43,9 +43,6 @@ export const GuestRoute = ({ children }) => {
   if (isAuthenticated) {
     // Redirect to the intended page or home if user is already authenticated
     const returnUrl = location.state?.returnUrl || '/'
-    if (import.meta.env.DEV) {
-      console.log('[GuestRoute] User already authenticated, redirecting to:', returnUrl)
-    }
     return <Navigate to={returnUrl} replace />
   }
 

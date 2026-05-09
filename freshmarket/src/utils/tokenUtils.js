@@ -2,6 +2,16 @@
  * JWT utility functions for token handling
  */
 
+const decodeBase64Url = (value) => {
+  if (!value) return null
+
+  const normalized = value.replace(/-/g, '+').replace(/_/g, '/')
+  const padding = normalized.length % 4
+  const padded = padding === 0 ? normalized : normalized.padEnd(normalized.length + (4 - padding), '=')
+
+  return atob(padded)
+}
+
 /**
  * Decode JWT payload (base64 decoding)
  * @param {string} token - JWT token
@@ -11,7 +21,8 @@ export const decodeToken = (token) => {
   if (!token) return null
   try {
     const payload = token.split('.')[1]
-    return JSON.parse(atob(payload))
+    if (!payload) return null
+    return JSON.parse(decodeBase64Url(payload))
   } catch {
     return null
   }
@@ -50,10 +61,27 @@ export const getTokenExpiry = (token) => {
 export const getUserFromToken = (token) => {
   const decoded = decodeToken(token)
   if (!decoded) return null
+
+  const source =
+    (decoded.user && typeof decoded.user === 'object' && decoded.user) ||
+    (decoded.data && typeof decoded.data === 'object' && decoded.data) ||
+    decoded
+
+  const resolvedId =
+    source.id ||
+    source._id ||
+    source.userId ||
+    decoded.id ||
+    decoded._id ||
+    decoded.userId ||
+    decoded.sub ||
+    null
+
   return {
-    id: decoded.id || decoded._id,
-    name: decoded.name,
-    email: decoded.email,
-    role: decoded.role,
+    id: resolvedId,
+    _id: resolvedId,
+    name: source.name || source.username || source.fullName || decoded.name || '',
+    email: source.email || decoded.email || decoded.userEmail || '',
+    role: source.role || decoded.role,
   }
 }

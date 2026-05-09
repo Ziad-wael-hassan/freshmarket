@@ -2,7 +2,7 @@ import { motion } from 'framer-motion'
 
 export const PageLoader = () => {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-white dark:bg-surface-dark">
+    <div className="flex min-h-screen items-center justify-center bg-white dark:bg-surface">
       <div className="text-center">
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}

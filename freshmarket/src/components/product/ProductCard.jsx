@@ -9,9 +9,11 @@ import { Button } from '@/components/ui/Button'
 import { ProductCardActions } from '@/components/product/ProductCardActions'
 import { formatCurrency } from '@/utils/formatters'
 import { cn } from '@/utils/cn'
+import { normalizeProduct } from '@/utils/apiData'
 import toast from 'react-hot-toast'
 
 export const ProductCard = ({ product, className = '' }) => {
+  const resolvedProduct = normalizeProduct(product)
   const imageRef = useRef(null)
   const { addItem } = useCart()
   const { flyItemToCart } = useCartFly()
@@ -21,11 +23,11 @@ export const ProductCard = ({ product, className = '' }) => {
     e.stopPropagation()
 
     const imageEl = imageRef.current
-    if (imageEl && product?.imageCover) {
-      flyItemToCart(product.imageCover, imageEl.getBoundingClientRect())
+    if (imageEl && resolvedProduct?.imageCover) {
+      flyItemToCart(resolvedProduct.imageCover, imageEl.getBoundingClientRect())
     }
 
-    const result = await addItem(product?._id)
+    const result = await addItem(resolvedProduct)
     if (result?.success) {
       toast.success('Added to cart!')
     } else {
@@ -33,7 +35,7 @@ export const ProductCard = ({ product, className = '' }) => {
     }
   }
 
-  if (!product) return null
+  if (!resolvedProduct) return null
 
   return (
     <>
@@ -47,27 +49,27 @@ export const ProductCard = ({ product, className = '' }) => {
           className
         )}
       >
-        <Link to={`/products/${product._id}`} className="flex h-full flex-col">
+        <Link to={`/products/${resolvedProduct._id}`} className="flex h-full flex-col">
           {/* Image Container */}
           <div className="relative aspect-square overflow-hidden bg-muted">
             <LazyImage
               ref={imageRef}
-              src={product.imageCover || '/placeholder-product.png'}
-              alt={product.title || 'Product Image'}
+              src={resolvedProduct.imageCover || '/placeholder-product.png'}
+              alt={resolvedProduct.title || 'Product Image'}
               className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
             />
 
             {/* Overlay Actions */}
-            <ProductCardActions productId={product._id} />
+            <ProductCardActions product={resolvedProduct} productId={resolvedProduct._id} />
 
             {/* Stock Status Badge */}
-            {product.quantity <= 5 && product.quantity > 0 && (
+            {resolvedProduct.quantity <= 5 && resolvedProduct.quantity > 0 && (
               <div className="absolute bottom-3 left-3 rounded-full bg-amber-500 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-lg shadow-amber-500/20">
-                Only {product.quantity} left
+                Only {resolvedProduct.quantity} left
               </div>
             )}
 
-            {product.quantity === 0 && (
+            {resolvedProduct.quantity === 0 && (
               <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
                 <span className="rounded-full bg-white px-4 py-2 text-xs font-bold uppercase tracking-widest text-black shadow-xl">
                   Out of Stock
@@ -80,22 +82,22 @@ export const ProductCard = ({ product, className = '' }) => {
           <div className="flex flex-1 flex-col justify-between p-4">
             <div>
               <h3 className="mb-2 line-clamp-2 text-sm font-medium text-text-primary break-words" dir="auto">
-                {product?.title || 'Untitled Product'}
+                {resolvedProduct.title}
               </h3>
 
               <div className="mb-3 flex items-center gap-2">
-                <span className="text-lg font-bold text-primary-600">
-                  {formatCurrency(product.priceAfterDiscount || product.price || 0)}
+                <span className="text-lg font-bold text-primary-600" dir="ltr">
+                  {formatCurrency(resolvedProduct.priceAfterDiscount || resolvedProduct.price || 0)}
                 </span>
-                {product.priceAfterDiscount && (
-                  <span className="text-sm text-gray-500 line-through">
-                    {formatCurrency(product.price || 0)}
+                {resolvedProduct.priceAfterDiscount && (
+                  <span className="text-sm text-gray-500 line-through dark:text-gray-400" dir="ltr">
+                    {formatCurrency(resolvedProduct.price || 0)}
                   </span>
                 )}
               </div>
 
               {/* Rating */}
-              {product.ratingsAverage !== undefined && (
+              {resolvedProduct.ratingsAverage !== undefined && (
                 <div className="mb-3 flex items-center gap-1">
                   <div className="flex">
                     {Array.from({ length: 5 }).map((_, i) => (
@@ -103,7 +105,7 @@ export const ProductCard = ({ product, className = '' }) => {
                         key={i}
                         className={cn(
                           'h-4 w-4',
-                          i < Math.floor(product.ratingsAverage || 0) ? 'text-yellow-400' : 'text-gray-300'
+                          i < Math.floor(resolvedProduct.ratingsAverage || 0) ? 'text-yellow-400' : 'text-gray-300'
                         )}
                         fill="currentColor"
                         viewBox="0 0 20 20"
@@ -113,7 +115,7 @@ export const ProductCard = ({ product, className = '' }) => {
                     ))}
                   </div>
                   <span className="text-sm text-text-secondary">
-                    ({(product.ratingsAverage || 0).toFixed(1)})
+                    ({(resolvedProduct.ratingsAverage || 0).toFixed(1)})
                   </span>
                 </div>
               )}
@@ -122,12 +124,12 @@ export const ProductCard = ({ product, className = '' }) => {
             {/* Add to Cart Button */}
             <Button
               onClick={handleAddToCart}
-              disabled={product.quantity === 0}
+              disabled={resolvedProduct.quantity === 0}
               className="w-full mt-auto"
               size="sm"
             >
               <ShoppingCart size={16} className="mr-2" />
-              {product.quantity === 0 ? 'Out of Stock' : 'Add to Cart'}
+              {resolvedProduct.quantity === 0 ? 'Out of Stock' : 'Add to Cart'}
             </Button>
           </div>
         </Link>

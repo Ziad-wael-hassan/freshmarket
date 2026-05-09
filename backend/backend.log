@@ -1,0 +1,126 @@
+
+> backend@1.0.0 start
+> node server.js
+
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+✅ Firebase Admin initialized successfully
+🚀 Server running on port 5000
+[0mPOST /api/v1/cart [32m200[0m 11.934 ms - 260[0m
+SyntaxError: Unexpected token 'n', "null" is not valid JSON
+    at JSON.parse (<anonymous>)
+    at createStrictSyntaxError (/home/nullz/projects/FreshCart/backend/node_modules/body-parser/lib/types/json.js:109:10)
+    at parse (/home/nullz/projects/FreshCart/backend/node_modules/body-parser/lib/types/json.js:66:15)
+    at /home/nullz/projects/FreshCart/backend/node_modules/body-parser/lib/read.js:162:18
+    at AsyncResource.runInAsyncScope (node:async_hooks:226:14)
+    at invokeCallback (/home/nullz/projects/FreshCart/backend/node_modules/raw-body/index.js:238:16)
+    at done (/home/nullz/projects/FreshCart/backend/node_modules/raw-body/index.js:227:7)
+    at IncomingMessage.onEnd (/home/nullz/projects/FreshCart/backend/node_modules/raw-body/index.js:287:7)
+    at IncomingMessage.emit (node:events:508:20)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+SyntaxError: Unexpected token 'n', "null" is not valid JSON
+    at JSON.parse (<anonymous>)
+    at createStrictSyntaxError (/home/nullz/projects/FreshCart/backend/node_modules/body-parser/lib/types/json.js:109:10)
+    at parse (/home/nullz/projects/FreshCart/backend/node_modules/body-parser/lib/types/json.js:66:15)
+    at /home/nullz/projects/FreshCart/backend/node_modules/body-parser/lib/read.js:162:18
+    at AsyncResource.runInAsyncScope (node:async_hooks:226:14)
+    at invokeCallback (/home/nullz/projects/FreshCart/backend/node_modules/raw-body/index.js:238:16)
+    at done (/home/nullz/projects/FreshCart/backend/node_modules/raw-body/index.js:227:7)
+    at IncomingMessage.onEnd (/home/nullz/projects/FreshCart/backend/node_modules/raw-body/index.js:287:7)
+    at IncomingMessage.emit (node:events:508:20)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+SyntaxError: Unexpected token 'n', "null" is not valid JSON
+    at JSON.parse (<anonymous>)
+    at createStrictSyntaxError (/home/nullz/projects/FreshCart/backend/node_modules/body-parser/lib/types/json.js:109:10)
+    at parse (/home/nullz/projects/FreshCart/backend/node_modules/body-parser/lib/types/json.js:66:15)
+    at /home/nullz/projects/FreshCart/backend/node_modules/body-parser/lib/read.js:162:18
+    at AsyncResource.runInAsyncScope (node:async_hooks:226:14)
+    at invokeCallback (/home/nullz/projects/FreshCart/backend/node_modules/raw-body/index.js:238:16)
+    at done (/home/nullz/projects/FreshCart/backend/node_modules/raw-body/index.js:227:7)
+    at IncomingMessage.onEnd (/home/nullz/projects/FreshCart/backend/node_modules/raw-body/index.js:287:7)
+    at IncomingMessage.emit (node:events:508:20)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+SyntaxError: Unexpected token 'n', "null" is not valid JSON
+    at JSON.parse (<anonymous>)
+    at createStrictSyntaxError (/home/nullz/projects/FreshCart/backend/node_modules/body-parser/lib/types/json.js:109:10)
+    at parse (/home/nullz/projects/FreshCart/backend/node_modules/body-parser/lib/types/json.js:66:15)
+    at /home/nullz/projects/FreshCart/backend/node_modules/body-parser/lib/read.js:162:18
+    at AsyncResource.runInAsyncScope (node:async_hooks:226:14)
+    at invokeCallback (/home/nullz/projects/FreshCart/backend/node_modules/raw-body/index.js:238:16)
+    at done (/home/nullz/projects/FreshCart/backend/node_modules/raw-body/index.js:227:7)
+    at IncomingMessage.onEnd (/home/nullz/projects/FreshCart/backend/node_modules/raw-body/index.js:287:7)
+    at IncomingMessage.emit (node:events:508:20)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+SyntaxError: Unexpected token 'n', "null" is not valid JSON
+    at JSON.parse (<anonymous>)
+    at createStrictSyntaxError (/home/nullz/projects/FreshCart/backend/node_modules/body-parser/lib/types/json.js:109:10)
+    at parse (/home/nullz/projects/FreshCart/backend/node_modules/body-parser/lib/types/json.js:66:15)
+    at /home/nullz/projects/FreshCart/backend/node_modules/body-parser/lib/read.js:162:18
+    at AsyncResource.runInAsyncScope (node:async_hooks:226:14)
+    at invokeCallback (/home/nullz/projects/FreshCart/backend/node_modules/raw-body/index.js:238:16)
+    at done (/home/nullz/projects/FreshCart/backend/node_modules/raw-body/index.js:227:7)
+    at IncomingMessage.onEnd (/home/nullz/projects/FreshCart/backend/node_modules/raw-body/index.js:287:7)
+    at IncomingMessage.emit (node:events:508:20)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+[0mGET /api/v1/cart [32m200[0m 1.390 ms - 260[0m
+[0mGET /api/v1/wishlist [32m200[0m 1.302 ms - 40[0m
+SyntaxError: Unexpected token 'n', "null" is not valid JSON
+    at JSON.parse (<anonymous>)
+    at createStrictSyntaxError (/home/nullz/projects/FreshCart/backend/node_modules/body-parser/lib/types/json.js:109:10)
+    at parse (/home/nullz/projects/FreshCart/backend/node_modules/body-parser/lib/types/json.js:66:15)
+    at /home/nullz/projects/FreshCart/backend/node_modules/body-parser/lib/read.js:162:18
+    at AsyncResource.runInAsyncScope (node:async_hooks:226:14)
+    at invokeCallback (/home/nullz/projects/FreshCart/backend/node_modules/raw-body/index.js:238:16)
+    at done (/home/nullz/projects/FreshCart/backend/node_modules/raw-body/index.js:227:7)
+    at IncomingMessage.onEnd (/home/nullz/projects/FreshCart/backend/node_modules/raw-body/index.js:287:7)
+    at IncomingMessage.emit (node:events:508:20)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+[0mGET /api/v1/users/profile [32m200[0m 1.229 ms - 111[0m
+[0mGET /api/v1/users/profile [36m304[0m 1.173 ms - -[0m
+[0mGET /api/v1/cart [36m304[0m 0.942 ms - -[0m
+[0mGET /api/v1/wishlist [36m304[0m 3.029 ms - -[0m
+[0mPOST /api/v1/cart [32m200[0m 0.894 ms - 469[0m
+SyntaxError: Unexpected token 'n', "null" is not valid JSON
+    at JSON.parse (<anonymous>)
+    at createStrictSyntaxError (/home/nullz/projects/FreshCart/backend/node_modules/body-parser/lib/types/json.js:109:10)
+    at parse (/home/nullz/projects/FreshCart/backend/node_modules/body-parser/lib/types/json.js:66:15)
+    at /home/nullz/projects/FreshCart/backend/node_modules/body-parser/lib/read.js:162:18
+    at AsyncResource.runInAsyncScope (node:async_hooks:226:14)
+    at invokeCallback (/home/nullz/projects/FreshCart/backend/node_modules/raw-body/index.js:238:16)
+    at done (/home/nullz/projects/FreshCart/backend/node_modules/raw-body/index.js:227:7)
+    at IncomingMessage.onEnd (/home/nullz/projects/FreshCart/backend/node_modules/raw-body/index.js:287:7)
+    at IncomingMessage.emit (node:events:508:20)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+[0mPOST /api/v1/wishlist [32m200[0m 0.916 ms - 56[0m
+[0mPOST /api/v1/wishlist [32m200[0m 1.547 ms - 83[0m
+[0mPOST /api/v1/wishlist [32m200[0m 0.430 ms - 110[0m
+[0mPOST /auth/google [32m200[0m 427.540 ms - 469[0m
+[0mGET /api/v1/cart [32m200[0m 1.721 ms - 469[0m
+[0mGET /api/v1/wishlist [32m200[0m 1.632 ms - 736[0m
+[0mGET /api/v1/cart [36m304[0m 0.739 ms - -[0m
+[0mGET /api/v1/wishlist [36m304[0m 4.537 ms - -[0m
+[0mPOST /auth/google [32m200[0m 6.191 ms - 472[0m
+[0mGET /api/v1/cart [32m200[0m 0.913 ms - 81[0m
+[0mGET /api/v1/wishlist [32m200[0m 0.850 ms - 40[0m
+[0mGET /api/v1/cart [36m304[0m 1.008 ms - -[0m
+[0mGET /api/v1/wishlist [36m304[0m 3.328 ms - -[0m
+[0mPOST /auth/google [32m200[0m 3.757 ms - 469[0m
+[0mGET /api/v1/cart [32m200[0m 3.261 ms - 469[0m
+[0mGET /api/v1/wishlist [32m200[0m 0.923 ms - 736[0m
+[0mGET /api/v1/cart [36m304[0m 3.575 ms - -[0m
+[0mGET /api/v1/wishlist [36m304[0m 1.146 ms - -[0m
+[0mGET /api/v1/users/profile [32m200[0m 0.777 ms - 128[0m
+[0mGET /api/v1/users/profile [36m304[0m 0.650 ms - -[0m
+[0mGET /api/v1/cart [36m304[0m 1.739 ms - -[0m
+[0mGET /api/v1/wishlist [36m304[0m 0.718 ms - -[0m
+[0mGET /api/v1/users/profile [36m304[0m 0.758 ms - -[0m
+[0mGET /api/v1/users/profile [36m304[0m 0.895 ms - -[0m
+[0mGET /api/v1/cart [36m304[0m 0.606 ms - -[0m
+[0mGET /api/v1/wishlist [36m304[0m 0.605 ms - -[0m
+[0mPOST /api/v1/cart [32m200[0m 1.322 ms - 647[0m
+[0mDELETE /api/v1/wishlist/6428ead5dc1175abc65ca0ad [32m200[0m 0.813 ms - 83[0m
+[0mPOST /api/v1/cart [32m200[0m 0.583 ms - 647[0m
+[0mDELETE /api/v1/wishlist/6428eb43dc1175abc65ca0b3 [32m200[0m 0.568 ms - 56[0m
+[0mPOST /api/v1/cart [32m200[0m 0.389 ms - 825[0m
+[0mDELETE /api/v1/wishlist/6428ebc6dc1175abc65ca0b9 [32m200[0m 0.456 ms - 30[0m
+[0mDELETE /api/v1/cart/6428eb43dc1175abc65ca0b3 [32m200[0m 0.818 ms - 647[0m
+[0mPOST /api/v1/wishlist [32m200[0m 2.177 ms - 56[0m

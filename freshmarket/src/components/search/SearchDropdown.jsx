@@ -129,7 +129,7 @@ export const SearchDropdown = ({ query, onSelect, isOpen, onClose }) => {
                     <p className="truncate text-sm font-medium text-gray-900 dark:text-gray-100">
                       {product.title}
                     </p>
-                    <p className="text-sm text-primary-600 dark:text-primary-400">
+                    <p className="text-sm text-primary-600 dark:text-primary-400" dir="ltr">
                       {formatCurrency(product.price)}
                     </p>
                   </div>

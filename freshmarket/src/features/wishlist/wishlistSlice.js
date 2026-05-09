@@ -58,6 +58,7 @@ export const fetchWishlist = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await wishlistService.get()
+      console.log('Wishlist Response:', response.data)
       return response.data
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch wishlist')
@@ -67,15 +68,16 @@ export const fetchWishlist = createAsyncThunk(
 
 export const toggleWishlist = createAsyncThunk(
   'wishlist/toggleWishlist',
-  async ({ productId, isWishlisted }, { getState, rejectWithValue }) => {
+  async ({ product, productId, isWishlisted }, { getState, rejectWithValue }) => {
     try {
+      const id = productId || product?._id
       if (isWishlisted) {
         const existingItem = getState().wishlist.items.find(
-          (item) => item._id === productId || item.wishlistItemId === productId
+          (item) => item._id === id || item.wishlistItemId === id
         )
-        await wishlistService.remove(existingItem?.wishlistItemId || productId)
+        await wishlistService.remove(existingItem?.wishlistItemId || id)
       } else {
-        await wishlistService.add(productId)
+        await wishlistService.add(product)
       }
       return { skipRefresh: true }
     } catch (error) {
@@ -122,7 +124,7 @@ const wishlistSlice = createSlice({
       .addCase(toggleWishlist.fulfilled, (state, action) => {
         state.loading = false
         if (action.payload?.skipRefresh) {
-          const toggledId = action.meta.arg.productId
+          const toggledId = action.meta.arg.productId || action.meta.arg.product?._id
           const idx = state.itemIds.indexOf(toggledId)
           if (idx !== -1) {
             state.items.splice(idx, 1)

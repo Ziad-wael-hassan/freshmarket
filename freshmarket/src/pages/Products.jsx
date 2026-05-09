@@ -9,9 +9,10 @@ import { ProductCard, ProductCardSkeleton } from '@/components/product/ProductCa
 import { ErrorState } from '@/components/ui/ErrorState'
 import { Button } from '@/components/ui/Button'
 import { Pagination } from '@/components/common/Pagination'
+import { normalizeProduct, unwrapApiCollection } from '@/utils/apiData'
 import { getErrorMessage } from '@/utils/getErrorMessage'
 import { productMatchesSearch } from '@/utils/search'
-import { Search, X, SlidersHorizontal, Sparkles } from 'lucide-react'
+import { Search, X, SlidersHorizontal } from 'lucide-react'
 import { cn } from '@/utils/cn'
 
 const Products = () => {
@@ -69,26 +70,26 @@ const Products = () => {
     try {
       setLoading(true)
       setError(null)
-      console.log('ProductsPage: Starting data fetch...', { filters, debouncedKeyword })
 
       const hasKeyword = debouncedKeyword?.trim()
-      
-      // 1. Fetch discovery set (everything matching keyword, no other filters)
-      const discoveryParams = { limit: 500 }
-      if (hasKeyword) discoveryParams.keyword = debouncedKeyword
-      
-      console.log('ProductsPage: Fetching discovery set...')
-      const discoveryRes = await productService.getAll(discoveryParams)
-      const rawDiscoveryData = discoveryRes.data?.data || discoveryRes.data || []
-      
-      const matching = (Array.isArray(rawDiscoveryData) ? rawDiscoveryData : []).filter((p) =>
-        hasKeyword ? productMatchesSearch(p, debouncedKeyword) : true
-      )
-      const uniqueMatching = Array.from(new Map(matching.map(p => [p._id, p])).values())
-      setAllMatchingProducts(uniqueMatching)
-      console.log(`ProductsPage: Discovery set contains ${uniqueMatching.length} items`)
+      let uniqueMatching = []
 
-      // 2. Fetch current page (respecting all filters)
+      if (hasKeyword) {
+        const discoveryRes = await productService.getAll({
+          keyword: debouncedKeyword,
+          limit: 200,
+        })
+
+        const rawDiscoveryData = unwrapApiCollection(discoveryRes)
+          .map((product) => normalizeProduct(product))
+          .filter(Boolean)
+
+        const matching = rawDiscoveryData.filter((product) => productMatchesSearch(product, debouncedKeyword))
+        uniqueMatching = Array.from(new Map(matching.map((product) => [product._id, product])).values())
+      }
+
+      setAllMatchingProducts(uniqueMatching)
+
       const params = { 
         sort: filters.sort,
         page: filters.page,
@@ -98,20 +99,17 @@ const Products = () => {
       if (filters.category) params.category = filters.category
       if (filters.brand) params.brand = filters.brand
 
-      console.log('ProductsPage: Fetching current page...', params)
       const response = await productService.getAll(params)
-      let resultProducts = response.data?.data || response.data || []
-      if (!Array.isArray(resultProducts)) resultProducts = []
+      let resultProducts = unwrapApiCollection(response)
+        .map((product) => normalizeProduct(product))
+        .filter(Boolean)
 
-      // Deduplicate results to ensure no overlapping cards
-      resultProducts = Array.from(new Map(resultProducts.map(p => [p._id, p])).values())
+      resultProducts = Array.from(new Map(resultProducts.map((product) => [product._id, product])).values())
 
-      // If client-side search is needed (backend search is imperfect)
       if (hasKeyword) {
-        console.log('ProductsPage: Performing client-side filter for keyword...')
-        const filteredResults = uniqueMatching.filter(p => {
-          const catId = p.category?._id || p.category
-          const brandId = p.brand?._id || p.brand
+        const filteredResults = uniqueMatching.filter((product) => {
+          const catId = product.category?._id || product.category
+          const brandId = product.brand?._id || product.brand
           const matchesCat = !filters.category || catId === filters.category
           const matchesBrand = !filters.brand || brandId === filters.brand
           return matchesCat && matchesBrand
@@ -136,9 +134,7 @@ const Products = () => {
       }
 
       setProducts(resultProducts)
-      console.log(`ProductsPage: Rendered ${resultProducts.length} items for current page`)
     } catch (err) {
-      console.error('ProductsPage: Fetch failed:', err)
       setError(getErrorMessage(err))
     } finally {
       setLoading(false)
@@ -151,13 +147,15 @@ const Products = () => {
 
   // Derive visible categories based on search results
   const visibleCategories = useMemo(() => {
+    if (!debouncedKeyword) return globalCategories || []
     if (!Array.isArray(allMatchingProducts)) return []
     const activeIds = new Set(allMatchingProducts.map(p => p?.category?._id || p?.category).filter(Boolean))
     return (globalCategories || []).filter(c => c?._id && activeIds.has(c._id))
-  }, [allMatchingProducts, globalCategories])
+  }, [allMatchingProducts, debouncedKeyword, globalCategories])
 
   // Derive visible brands based on search results + selected category
   const visibleBrands = useMemo(() => {
+    if (!debouncedKeyword) return globalBrands || []
     if (!Array.isArray(allMatchingProducts)) return []
     const productsInCat = filters.category 
       ? allMatchingProducts.filter(p => (p?.category?._id || p?.category) === filters.category)
@@ -165,10 +163,9 @@ const Products = () => {
     
     const activeIds = new Set(productsInCat.map(p => p?.brand?._id || p?.brand).filter(Boolean))
     return (globalBrands || []).filter(b => b?._id && activeIds.has(b._id))
-  }, [allMatchingProducts, globalBrands, filters.category])
+  }, [allMatchingProducts, debouncedKeyword, globalBrands, filters.category])
 
   const updateFilter = (key, value) => {
-    console.log(`ProductsPage: Updating filter ${key} -> ${value}`)
     if (key === 'keyword') {
       setSearchInput(value)
       isTyping.current = true
@@ -182,7 +179,6 @@ const Products = () => {
   }
 
   const clearFilters = () => {
-    console.log('ProductsPage: Clearing all filters')
     setSearchInput('')
     setFilters({
       category: '',
@@ -280,7 +276,7 @@ const Products = () => {
                 )}
                 {filters.category && (
                   <span className="inline-flex items-center gap-1 rounded-full bg-primary-100 px-3 py-1 text-sm text-primary-700 dark:bg-primary-900 dark:text-primary-300">
-                    Category: {categories.find((c) => c._id === filters.category)?.name}
+                    Category: {globalCategories.find((c) => c._id === filters.category)?.name}
                     <button onClick={() => updateFilter('category', '')}>
                       <X size={14} />
                     </button>
@@ -288,7 +284,7 @@ const Products = () => {
                 )}
                 {filters.brand && (
                   <span className="inline-flex items-center gap-1 rounded-full bg-primary-100 px-3 py-1 text-sm text-primary-700 dark:bg-primary-900 dark:text-primary-300">
-                    Brand: {brands.find((b) => b._id === filters.brand)?.name}
+                    Brand: {globalBrands.find((b) => b._id === filters.brand)?.name}
                     <button onClick={() => updateFilter('brand', '')}>
                       <X size={14} />
                     </button>

@@ -4,13 +4,7 @@
 
 export const API = {
   // Auth endpoints
-  AUTH: {
-    SIGNUP: '/api/v1/auth/signup',
-    SIGNIN: '/api/v1/auth/signin',
-    FORGOT_PASSWORD: '/api/v1/auth/forgotPasswords',
-    VERIFY_RESET_CODE: '/api/v1/auth/verifyResetCode',
-    RESET_PASSWORD: '/api/v1/auth/resetPassword',
-  },
+  AUTH: {},
 
   // Users endpoints
   USERS: {
@@ -82,8 +76,5 @@ export const ROUTES = {
   ORDER_DETAIL: (id) => `/orders/${id}`,
   PROFILE: '/profile',
   LOGIN: '/login',
-  REGISTER: '/register',
-  FORGOT_PASSWORD: '/forgot-password',
-  RESET_PASSWORD: '/reset-password',
   NOT_FOUND: '*',
 }

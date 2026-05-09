@@ -25,6 +25,8 @@ export default {
         'border-custom': 'var(--border-color)',
         'text-primary': 'var(--text-primary)',
         'text-secondary': 'var(--text-secondary)',
+        'green-accent': 'var(--green-accent)',
+        'green-dark': 'var(--green-dark)',
       },
       fontFamily: {
         display: ['Plus Jakarta Sans', 'sans-serif'],

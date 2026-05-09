@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useProduct } from '@/hooks/useProduct'
 import { useCart } from '@/hooks/useCart'
 import { useWishlist } from '@/hooks/useWishlist'
 import { Button } from '@/components/ui/Button'
 import { formatCurrency } from '@/utils/formatters'
+import { normalizeProduct } from '@/utils/apiData'
 import { X, Heart, ShoppingCart, Star, Minus, Plus } from 'lucide-react'
 import toast from 'react-hot-toast'
 
@@ -13,12 +14,20 @@ export const QuickViewModal = ({ isOpen, onClose, productId }) => {
   const { addItem } = useCart()
   const { toggleItem, isInWishlist } = useWishlist()
   const [quantity, setQuantity] = useState(1)
+  const resolvedProduct = normalizeProduct(product)
+
+  useEffect(() => {
+    if (isOpen) {
+      setQuantity(1)
+    }
+  }, [isOpen, productId])
 
   const isWishlisted = isInWishlist(productId)
-  const hasDiscount = product?.priceAfterDiscount && product.priceAfterDiscount < product.price
+  const hasDiscount =
+    resolvedProduct?.priceAfterDiscount && resolvedProduct.priceAfterDiscount < resolvedProduct.price
 
   const handleAddToCart = async () => {
-    const result = await addItem(productId)
+    const result = await addItem(resolvedProduct, quantity)
     if (result.success) {
       toast.success('Added to cart!')
       onClose()
@@ -29,6 +38,11 @@ export const QuickViewModal = ({ isOpen, onClose, productId }) => {
 
   const handleToggleWishlist = async () => {
     const result = await toggleItem(productId)
+    if (result.requiresAuth) {
+      onClose()
+      return
+    }
+
     if (result.success) {
       toast.success(isWishlisted ? 'Removed from wishlist' : 'Added to wishlist')
     }
@@ -70,24 +84,24 @@ export const QuickViewModal = ({ isOpen, onClose, productId }) => {
                     <div className="h-4 w-full rounded bg-gray-200 dark:bg-gray-700" />
                   </div>
                 </div>
-              ) : !product ? (
+              ) : !resolvedProduct ? (
                 <div className="p-8 text-center text-gray-500">Product not found</div>
               ) : (
                 <div className="grid grid-cols-1 gap-6 p-6 md:grid-cols-2">
                   <div className="aspect-square overflow-hidden rounded-xl bg-gray-100 dark:bg-gray-700">
                     <img
-                      src={product.imageCover}
-                      alt={product.title}
+                      src={resolvedProduct.imageCover || '/placeholder-product.png'}
+                      alt={resolvedProduct.title}
                       className="h-full w-full object-cover"
                     />
                   </div>
 
                   <div className="space-y-4">
                     <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
-                      {product.title}
+                      {resolvedProduct.title}
                     </h2>
 
-                    {product.ratingsAverage && (
+                    {resolvedProduct.ratingsAverage > 0 && (
                       <div className="flex items-center gap-2">
                         <div className="flex">
                           {Array.from({ length: 5 }).map((_, i) => (
@@ -95,7 +109,7 @@ export const QuickViewModal = ({ isOpen, onClose, productId }) => {
                               key={i}
                               size={14}
                               className={
-                                i < Math.floor(product.ratingsAverage)
+                                i < Math.floor(resolvedProduct.ratingsAverage)
                                   ? 'text-yellow-400 fill-current'
                                   : 'text-gray-300'
                               }
@@ -103,24 +117,24 @@ export const QuickViewModal = ({ isOpen, onClose, productId }) => {
                           ))}
                         </div>
                         <span className="text-sm text-gray-600 dark:text-gray-400">
-                          {product.ratingsAverage.toFixed(1)} ({product.ratingsQuantity || 0})
+                          {resolvedProduct.ratingsAverage.toFixed(1)} ({resolvedProduct.ratingsQuantity || 0})
                         </span>
                       </div>
                     )}
 
                     <div className="flex items-center gap-3">
-                      <span className="text-2xl font-bold text-primary-600">
-                        {formatCurrency(hasDiscount ? product.priceAfterDiscount : product.price)}
+                      <span className="text-2xl font-bold text-primary-600" dir="ltr">
+                        {formatCurrency(hasDiscount ? resolvedProduct.priceAfterDiscount : resolvedProduct.price)}
                       </span>
                       {hasDiscount && (
-                        <span className="text-lg text-gray-500 line-through">
-                          {formatCurrency(product.price)}
+                        <span className="text-lg text-gray-500 line-through dark:text-gray-400" dir="ltr">
+                          {formatCurrency(resolvedProduct.price)}
                         </span>
                       )}
                     </div>
 
                     <p className="text-sm leading-relaxed text-gray-600 dark:text-gray-400 line-clamp-3">
-                      {product.description}
+                      {resolvedProduct.description}
                     </p>
 
                     <div className="flex items-center gap-2">
@@ -138,7 +152,7 @@ export const QuickViewModal = ({ isOpen, onClose, productId }) => {
                           {quantity}
                         </span>
                         <button
-                          onClick={() => setQuantity(q => Math.min(q + 1, product.quantity || 1))}
+                          onClick={() => setQuantity(q => Math.min(q + 1, resolvedProduct.quantity || 1))}
                           className="p-1.5 text-gray-600 hover:text-gray-900 dark:text-gray-400"
                         >
                           <Plus size={14} />
@@ -147,9 +161,9 @@ export const QuickViewModal = ({ isOpen, onClose, productId }) => {
                     </div>
 
                     <div className="flex gap-3">
-                      <Button onClick={handleAddToCart} className="flex-1" disabled={product.quantity === 0}>
+                      <Button onClick={handleAddToCart} className="flex-1" disabled={resolvedProduct.quantity === 0}>
                         <ShoppingCart size={16} className="mr-2" />
-                        {product.quantity === 0 ? 'Out of Stock' : 'Add to Cart'}
+                        {resolvedProduct.quantity === 0 ? 'Out of Stock' : 'Add to Cart'}
                       </Button>
                       <Button
                         variant="outline"

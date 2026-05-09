@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { brandService } from '@/services/brandService'
 import { getErrorMessage } from '@/utils/getErrorMessage'
+import { unwrapApiCollection } from '@/utils/apiData'
 
 export const useBrands = () => {
   const [brands, setBrands] = useState([])
@@ -8,20 +9,32 @@ export const useBrands = () => {
   const [error, setError] = useState(null)
 
   useEffect(() => {
+    let isMounted = true
+
     const fetchBrands = async () => {
       try {
         setLoading(true)
         setError(null)
         const response = await brandService.getAll()
-        setBrands(response.data || [])
+        if (isMounted) {
+          setBrands(unwrapApiCollection(response))
+        }
       } catch (err) {
-        setError(getErrorMessage(err))
+        if (isMounted) {
+          setError(getErrorMessage(err))
+        }
       } finally {
-        setLoading(false)
+        if (isMounted) {
+          setLoading(false)
+        }
       }
     }
 
     fetchBrands()
+
+    return () => {
+      isMounted = false
+    }
   }, [])
 
   return { brands, loading, error }

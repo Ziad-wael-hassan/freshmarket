@@ -1,4 +1,4 @@
-import { forwardRef } from 'react'
+import { cloneElement, forwardRef, isValidElement } from 'react'
 import { cva } from 'class-variance-authority'
 import { cn } from '@/utils/cn'
 
@@ -28,25 +28,41 @@ const buttonVariants = cva(
 )
 
 export const Button = forwardRef(
-  ({ className, variant, size, asChild = false, loading, ...props }, ref) => {
-    const Comp = asChild ? 'span' : 'button'
+  ({ className, variant, size, asChild = false, loading, children, ...props }, ref) => {
+    const classes = cn(buttonVariants({ variant, size, className }))
+    const loadingContent = (
+      <>
+        <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+        Loading...
+      </>
+    )
+
+    if (asChild && isValidElement(children)) {
+      return cloneElement(children, {
+        ...props,
+        ref,
+        className: cn(classes, children.props.className),
+        children: loading ? loadingContent : children.props.children,
+      })
+    }
 
     if (loading) {
       return (
-        <Comp
-          className={cn(buttonVariants({ variant, size, className }))}
+        <button
+          className={classes}
           ref={ref}
           disabled
           {...props}
         >
-          <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-          Loading...
-        </Comp>
+          {loadingContent}
+        </button>
       )
     }
 
     return (
-      <Comp className={cn(buttonVariants({ variant, size, className }))} ref={ref} {...props} />
+      <button className={classes} ref={ref} {...props}>
+        {children}
+      </button>
     )
   }
 )

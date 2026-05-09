@@ -1,27 +1,26 @@
 import axiosInstance from './axiosInstance'
-import { API } from '@/constants/api'
+
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
+const BASE_PATH = `${BACKEND_URL}/api/v1/wishlist`
 
 /**
- * Wishlist API service
+ * Wishlist API service (Migrated to custom backend)
  */
 export const wishlistService = {
   /**
    * Get user's wishlist
-   * @returns {Promise}
    */
-  get: () => axiosInstance.get(API.WISHLIST.GET),
+  get: () => axiosInstance.get(BASE_PATH),
 
   /**
    * Add product to wishlist
-   * @param {string} productId - Product ID
-   * @returns {Promise}
+   * @param {object} product - Product details { productId, title, image, price, ... }
    */
-  add: (productId) => axiosInstance.post(API.WISHLIST.ADD, { productId }),
+  add: (product) => axiosInstance.post(BASE_PATH, product),
 
   /**
    * Remove product from wishlist
-   * @param {string} wishlistItemId - Wishlist item ID
-   * @returns {Promise}
+   * @param {string} productId - Product ID
    */
-  remove: (wishlistItemId) => axiosInstance.delete(API.WISHLIST.REMOVE(wishlistItemId)),
+  remove: (productId) => axiosInstance.delete(`${BASE_PATH}/${productId}`),
 }

@@ -7,12 +7,12 @@ import { CartFlyProvider } from '@/components/cart/CartFlyAnimation'
 
 export const RootLayout = () => {
   return (
-    <div className="min-h-screen bg-white text-gray-900 dark:bg-surface-dark dark:text-gray-100">
+    <div className="min-h-screen bg-white dark:bg-[#0f1117] text-gray-900 dark:text-white">
       <ScrollProgress />
       <ScrollToTop />
       <CartFlyProvider>
         <Navbar />
-        <main className="pt-20">
+        <main className="pt-20 bg-inherit dark:bg-[#0f1117]">
           <Outlet />
         </main>
         <Footer />

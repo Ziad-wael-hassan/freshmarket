@@ -1,48 +1,38 @@
 import axiosInstance from './axiosInstance'
-import { API } from '@/constants/api'
+
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
+const BASE_PATH = `${BACKEND_URL}/api/v1/cart`
 
 /**
- * Cart API service
+ * Cart API service (Migrated to custom backend)
  */
 export const cartService = {
   /**
    * Get user's cart
-   * @returns {Promise}
    */
-  get: () => axiosInstance.get(API.CART.GET),
+  get: () => axiosInstance.get(BASE_PATH),
 
   /**
    * Add product to cart
-   * @param {string} productId - Product ID
-   * @returns {Promise}
+   * @param {object} product - Product details { productId, title, image, price }
    */
-  add: (productId) => axiosInstance.post(API.CART.ADD, { productId }),
+  add: (product) => axiosInstance.post(BASE_PATH, product),
 
   /**
    * Update item quantity in cart
-   * @param {string} cartItemId - Cart item ID
+   * @param {string} productId - Product ID
    * @param {number} count - New quantity
-   * @returns {Promise}
    */
-  updateQuantity: (cartItemId, count) => axiosInstance.put(API.CART.UPDATE(cartItemId), { count }),
+  updateQuantity: (productId, count) => axiosInstance.put(`${BASE_PATH}/${productId}`, { count }),
 
   /**
    * Remove item from cart
-   * @param {string} cartItemId - Cart item ID
-   * @returns {Promise}
+   * @param {string} productId - Product ID
    */
-  remove: (cartItemId) => axiosInstance.delete(API.CART.REMOVE(cartItemId)),
+  remove: (productId) => axiosInstance.delete(`${BASE_PATH}/${productId}`),
 
   /**
    * Clear entire cart
-   * @returns {Promise}
    */
-  clear: () => axiosInstance.delete(API.CART.CLEAR),
-
-  /**
-   * Apply coupon code
-   * @param {string} coupon - Coupon code
-   * @returns {Promise}
-   */
-  applyCoupon: (coupon) => axiosInstance.put(API.CART.APPLY_COUPON, { coupon }),
+  clear: () => axiosInstance.delete(BASE_PATH),
 }

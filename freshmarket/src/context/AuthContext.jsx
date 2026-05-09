@@ -9,6 +9,8 @@ import { resetCart } from '@/features/cart/cartSlice'
 import { resetWishlist } from '@/features/wishlist/wishlistSlice'
 import { authService } from '@/services/authService'
 import { cartService } from '@/services/cartService'
+import { fetchCart } from '@/features/cart/cartSlice'
+import { fetchWishlist } from '@/features/wishlist/wishlistSlice'
 import {
   authDebug,
   clearAuthToken,
@@ -240,16 +242,19 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     let isMounted = true
+    let authTimeout
 
     const initializeAuth = async () => {
       const storedToken = getStoredAuthToken()
       authDebug('token loaded', storedToken ? 'present' : 'missing')
 
       if (!storedToken || !canUseToken(storedToken)) {
+        clearTimeout(authTimeout)
         clearBackendSession({ reason: 'bootstrap-missing-or-invalid-token' })
 
         if (isMounted) {
           setIsLoading(false)
+          setAuthInitialized(true)
           authDebug('auth initialized', { authenticated: false, source: 'guest' })
         }
 
@@ -288,16 +293,26 @@ export const AuthProvider = ({ children }) => {
         }
       } finally {
         if (isMounted) {
+          clearTimeout(authTimeout)
           setIsLoading(false)
           setAuthInitialized(true)
         }
       }
     }
 
+    authTimeout = setTimeout(() => {
+      if (isMounted) {
+        setIsLoading(false)
+        setAuthInitialized(true)
+        console.warn('[Auth] Timeout — forcing auth initialization complete')
+      }
+    }, 5000)
+
     initializeAuth()
 
     return () => {
       isMounted = false
+      clearTimeout(authTimeout)
     }
   }, [clearBackendSession, refreshAuthenticatedUser, restoreFromToken])
 
@@ -377,116 +392,68 @@ export const AuthProvider = ({ children }) => {
     })
   }, [token])
 
-  const login = useCallback(
-    async (credentials, returnUrl = '/') => {
-      setIsLoading(true)
 
-      try {
-        const response = await authService.signin(credentials, { skipUnauthorizedHandling: true })
-        const payload = unwrapApiData(response) || response.data
-        const nextToken = extractTokenFromResponse(response.data)
-
-        if (!nextToken) {
-          throw new Error('The login response did not include an auth token.')
-        }
-
-        const candidateUser = normalizeUser(payload?.user || response.data?.user || payload)
-        const tokenUser = resolveUserFromToken(nextToken, {
-          ...candidateUser,
-          email: candidateUser?.email || credentials.email,
-        })
-
-        setAuthToken(nextToken)
-        console.log('[Login] token persisted', {
-          tokenLength: nextToken?.length,
-          localStorageToken: window.localStorage.getItem('token'),
-        })
-
-        const nextUser = commitAuthenticatedSession(nextToken, candidateUser || tokenUser, {
-          persist: false,
-        })
-
-        if (!nextUser?._id) {
-          throw new Error('Unable to resolve your FreshCart profile.')
-        }
-
-        console.log('[Login] session committed, hydrating profile', { userId: nextUser._id })
-
-        toast.success(`Welcome back, ${nextUser.name || 'shopper'}!`)
-
-        try {
-          const hydratedUser = await refreshAuthenticatedUser(nextToken, {
-            allowTokenFallback: true,
-            source: 'login',
-          })
-          console.log('[Login] profile hydration succeeded', { userId: hydratedUser?._id })
-          if (hydratedUser) {
-            setUser(hydratedUser)
-          }
-        } catch (hydrateError) {
-          console.warn('[Login] profile hydration failed — keeping token session', {
-            status: hydrateError?.response?.status,
-            userId: nextUser._id,
-          })
-        }
-
-        setAuthInitialized(true)
-
-        if (localStorage.getItem('freshcart-guest-cart')) {
-          const localCart = JSON.parse(localStorage.getItem('freshcart-guest-cart') || '[]')
-          if (localCart.length > 0) {
-            const addPromises = localCart.map((item) => cartService.add(item.product._id).catch(() => null))
-            await Promise.allSettled(addPromises)
-          }
-          clearLocalCart()
-        }
-
-        navigate(returnUrl, { replace: true })
-
-        return { success: true, user: nextUser }
-      } catch (error) {
-        const message = getErrorMessage(error)
-        authDebug('login failed', {
-          status: error?.response?.status || 'unknown',
-          message,
-        })
-        clearBackendSession({ reason: 'login-failed', resetCommerce: false })
-        toast.error(message)
-        return { success: false, error: message }
-      } finally {
-        setIsLoading(false)
-      }
-    },
-    [clearBackendSession, commitAuthenticatedSession, navigate, refreshAuthenticatedUser]
-  )
 
   const loginWithGoogle = useCallback(async () => {
+    setIsLoading(true)
     try {
+      // 1. Firebase Sign-in
       const result = await signInWithPopup(auth, googleProvider)
       const firebaseUser = result.user
 
-      toast.success(`Signed in with Google as ${firebaseUser.displayName || firebaseUser.email}.`)
-      toast.warning('Google sign-in is limited. Sign in with email for full access to orders and cart.')
+      // 2. Get Firebase ID token
+      const firebaseToken = await firebaseUser.getIdToken()
 
-      navigate('/login', { replace: true })
-      return { success: true, limited: true }
-    } catch (error) {
-      let friendlyMessage = 'Failed to login with Google'
+      // 3. Exchange with backend for app JWT
+      const response = await authService.googleAuth({ firebaseToken })
+      const payload = unwrapApiData(response) || response.data
+      const nextToken = extractTokenFromResponse(response.data)
 
-      if (error.code === 'auth/popup-blocked') {
-        friendlyMessage = 'Popup was blocked by your browser. Please enable popups for this site.'
-      } else if (error.code === 'auth/popup-closed-by-user') {
-        friendlyMessage = 'Login window was closed before completion.'
-      } else if (error.code === 'auth/api-key-not-valid') {
-        friendlyMessage = 'Firebase API key is invalid. Please check your configuration.'
-      } else if (error.code === 'auth/unauthorized-domain') {
-        friendlyMessage = 'This domain is not authorized in Firebase Console.'
+      if (!nextToken) {
+        throw new Error('Backend did not return an authentication token.')
       }
 
-      toast.error(friendlyMessage)
-      return { success: false, error: friendlyMessage }
+      // 4. Commit session
+      const candidateUser = normalizeUser(payload?.user || response.data?.user || payload)
+      
+      setAuthToken(nextToken)
+      
+      const nextUser = commitAuthenticatedSession(nextToken, candidateUser, {
+        persist: true,
+      })
+
+      if (!nextUser?._id) {
+        throw new Error('Unable to resolve your FreshCart profile.')
+      }
+
+      toast.success(`Welcome, ${nextUser.name}!`)
+
+      // 5. Hydrate state
+      dispatch(fetchCart())
+      dispatch(fetchWishlist())
+      
+      setAuthInitialized(true)
+
+      return { success: true, user: nextUser }
+
+    } catch (error) {
+      console.error('Google login failed:', error)
+      const code = error?.code || ''
+      
+      if (code === 'auth/popup-blocked') {
+        toast.error('Popup blocked — please allow popups for this site')
+      } else if (code === 'auth/popup-closed-by-user') {
+        // Just silent exit
+      } else {
+        const message = error?.response?.data?.message || error.message || 'Google authentication failed'
+        toast.error(message)
+      }
+      
+      return { success: false, error: error.message }
+    } finally {
+      setIsLoading(false)
     }
-  }, [navigate])
+  }, [commitAuthenticatedSession, dispatch])
 
   const logout = useCallback(async () => {
     await performLogout({
@@ -525,12 +492,11 @@ export const AuthProvider = ({ children }) => {
       loading: isLoading,
       isLoading,
       authInitialized,
-      login,
       loginWithGoogle,
       logout,
       updateProfile,
     }),
-    [authInitialized, isAuthenticated, isLoading, login, loginWithGoogle, logout, token, updateProfile, user]
+    [authInitialized, isAuthenticated, isLoading, loginWithGoogle, logout, token, updateProfile, user]
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

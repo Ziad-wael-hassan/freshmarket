@@ -4,9 +4,10 @@ import { Heart, Loader2 } from 'lucide-react'
 import { useWishlist } from '@/hooks/useWishlist'
 import { cn } from '@/utils/cn'
 
-export const WishlistButton = ({ productId, className = '' }) => {
+export const WishlistButton = ({ product, productId, className = '' }) => {
   const { toggleItem, isInWishlist } = useWishlist()
-  const isWishlisted = isInWishlist(productId)
+  const id = productId || product?._id
+  const isWishlisted = isInWishlist(id)
   const [isLoading, setIsLoading] = useState(false)
   const [isAnimating, setIsAnimating] = useState(false)
   const pendingRef = useRef(false)
@@ -21,7 +22,8 @@ export const WishlistButton = ({ productId, className = '' }) => {
     setIsAnimating(true)
 
     try {
-      const result = await toggleItem(productId)
+      // Pass the full product object if available to avoid 400 errors on the backend
+      const result = await toggleItem(product || id)
       if (result.requiresAuth) return
       setTimeout(() => setIsAnimating(false), 500)
     } finally {
