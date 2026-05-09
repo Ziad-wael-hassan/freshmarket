@@ -103,6 +103,11 @@ const Hero = () => {
 
         <div className="hero-visual">
           <div className="panel-card">
+            <img
+              src="https://xcdn.next.co.uk/common/items/default/default/itemimages/3_4Ratio/product/lge/T26252s.jpg?im=Resize,width=750"
+              alt="Luxury Fashion Editorial"
+              className="panel-image"
+            />
             <div className="panel-overlay">
               <span className="panel-eyebrow">Edition 01</span>
               <strong className="panel-title">New Collection</strong>
@@ -111,12 +116,20 @@ const Hero = () => {
           </div>
 
           <div className="product-chip product-chip--1">
-            <span className="product-chip__square" />
+            <img
+              src="https://images.unsplash.com/photo-1520903920243-00d872a2d1c9?q=80&w=250&auto=format&fit=crop"
+              alt="Floral Silk Scarf"
+              className="product-chip__img"
+            />
             <span className="product-chip__name">Floral Silk Scarf</span>
             <b className="product-chip__price">$149</b>
           </div>
           <div className="product-chip product-chip--2">
-            <span className="product-chip__square" />
+            <img
+              src="https://images.unsplash.com/photo-1591047139829-d91aecb6caea?q=80&w=250&auto=format&fit=crop"
+              alt="Men's Jacket"
+              className="product-chip__img"
+            />
             <span className="product-chip__name">Men's Jacket</span>
             <b className="product-chip__price">$210</b>
           </div>
