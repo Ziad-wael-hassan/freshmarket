@@ -57,7 +57,7 @@ const Login = () => {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          className="w-full max-w-lg space-y-10 rounded-[2.5rem] bg-surface/40 backdrop-blur-2xl p-10 md:p-14 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.6)] border border-white/10 relative z-10"
+          className="w-full max-w-lg space-y-8 md:space-y-10 rounded-3xl md:rounded-[2.5rem] bg-surface/40 backdrop-blur-2xl p-8 md:p-14 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.6)] border border-white/10 relative z-10 mx-4"
         >
           {/* Noise overlay for the card */}
           <div className="absolute inset-0 rounded-[2.5rem] overflow-hidden pointer-events-none opacity-[0.03] mix-blend-overlay">
@@ -81,8 +81,8 @@ const Login = () => {
             </Link>
             
             <div className="space-y-2">
-              <h2 className="text-4xl font-extrabold tracking-tight text-text-primary">Welcome back</h2>
-              <p className="text-base text-text-secondary font-medium opacity-80">
+              <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-text-primary">Welcome back</h2>
+              <p className="text-sm md:text-base text-text-secondary font-medium opacity-80 px-4">
                 Experience the future of fresh groceries.
               </p>
             </div>
@@ -94,7 +94,7 @@ const Login = () => {
               whileTap={{ scale: 0.98 }}
               onClick={handleGoogleLogin}
               disabled={isLoading}
-              className="group relative flex h-[56px] w-full justify-center items-center rounded-2xl border border-white/10 bg-white/5 px-6 text-lg font-semibold text-white transition-all duration-500 hover:bg-white/10 hover:border-primary-500/50 hover:shadow-[0_0_40px_rgba(60,181,80,0.2)] disabled:opacity-50 disabled:cursor-not-allowed"
+              className="group relative flex h-[52px] md:h-[56px] w-full justify-center items-center rounded-2xl border border-white/10 bg-white/5 px-6 text-base md:text-lg font-semibold text-white transition-all duration-500 hover:bg-white/10 hover:border-primary-500/50 hover:shadow-[0_0_40px_rgba(60,181,80,0.2)] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? (
                 <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary-500 border-t-transparent" />

@@ -45,7 +45,7 @@ export const ProductCard = ({ product, className = '' }) => {
         whileHover={{ y: -4 }}
         transition={{ duration: 0.2 }}
         className={cn(
-          'group relative overflow-hidden rounded-xl border border-border-custom bg-card shadow-sm transition-all hover:shadow-lg h-full',
+          'group relative overflow-hidden rounded-2xl border border-border-custom bg-card shadow-sm transition-all hover:shadow-xl h-full',
           className
         )}
       >
@@ -85,12 +85,12 @@ export const ProductCard = ({ product, className = '' }) => {
                 {resolvedProduct.title}
               </h3>
 
-              <div className="mb-3 flex items-center gap-2">
-                <span className="text-lg font-bold text-primary-600" dir="ltr">
+              <div className="mb-4 flex items-center gap-2">
+                <span className="text-xl font-black text-primary-600" dir="ltr">
                   {formatCurrency(resolvedProduct.priceAfterDiscount || resolvedProduct.price || 0)}
                 </span>
                 {resolvedProduct.priceAfterDiscount && (
-                  <span className="text-sm text-gray-500 line-through dark:text-gray-400" dir="ltr">
+                  <span className="text-xs font-medium text-text-secondary/50 line-through" dir="ltr">
                     {formatCurrency(resolvedProduct.price || 0)}
                   </span>
                 )}
@@ -125,10 +125,10 @@ export const ProductCard = ({ product, className = '' }) => {
             <Button
               onClick={handleAddToCart}
               disabled={resolvedProduct.quantity === 0}
-              className="w-full mt-auto"
+              className="w-full mt-auto py-6 rounded-xl font-bold shadow-lg shadow-primary-500/10 active:scale-95 transition-transform"
               size="sm"
             >
-              <ShoppingCart size={16} className="mr-2" />
+              <ShoppingCart size={18} className="mr-2" />
               {resolvedProduct.quantity === 0 ? 'Out of Stock' : 'Add to Cart'}
             </Button>
           </div>

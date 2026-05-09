@@ -12,7 +12,8 @@ import { Pagination } from '@/components/common/Pagination'
 import { normalizeProduct, unwrapApiCollection } from '@/utils/apiData'
 import { getErrorMessage } from '@/utils/getErrorMessage'
 import { productMatchesSearch } from '@/utils/search'
-import { Search, X, SlidersHorizontal } from 'lucide-react'
+import { Search, X, SlidersHorizontal, ChevronRight } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/utils/cn'
 
 const Products = () => {
@@ -298,14 +299,120 @@ const Products = () => {
           </div>
         </ScrollReveal>
 
-        <div className="flex gap-8">
-          {/* Filters Sidebar */}
-          <div
-            className={cn(
-              'w-64 flex-shrink-0 space-y-6',
-              showFilters ? 'block' : 'hidden lg:block'
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Mobile Filters Drawer */}
+          <AnimatePresence>
+            {showFilters && (
+              <>
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  onClick={() => setShowFilters(false)}
+                  className="fixed inset-0 z-[2000] bg-black/60 backdrop-blur-sm lg:hidden"
+                />
+                <motion.div
+                  initial={{ x: '100%' }}
+                  animate={{ x: 0 }}
+                  exit={{ x: '100%' }}
+                  transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                  className="fixed bottom-0 right-0 top-0 z-[2001] w-[320px] bg-surface p-6 shadow-2xl lg:hidden flex flex-col"
+                >
+                  <div className="flex items-center justify-between mb-8">
+                    <h2 className="text-xl font-bold text-text-primary">Filters</h2>
+                    <button 
+                      onClick={() => setShowFilters(false)}
+                      className="p-2 rounded-full hover:bg-muted transition-colors"
+                    >
+                      <X size={24} />
+                    </button>
+                  </div>
+
+                  <div className="flex-1 overflow-y-auto pr-2 space-y-8">
+                    {/* Categories in Drawer */}
+                    {visibleCategories.length > 0 && (
+                      <div className="space-y-4">
+                        <h3 className="font-bold text-text-primary uppercase tracking-widest text-xs opacity-50">Categories</h3>
+                        <div className="flex flex-col gap-1">
+                          {visibleCategories.length > 1 && (
+                            <button
+                              onClick={() => { updateFilter('category', ''); setShowFilters(false) }}
+                              className={cn(
+                                'flex items-center justify-between px-4 py-3 rounded-xl text-sm font-bold transition-all',
+                                !filters.category ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/20' : 'text-text-secondary hover:bg-muted'
+                              )}
+                            >
+                              All Categories
+                              {!filters.category && <ChevronRight size={16} />}
+                            </button>
+                          )}
+                          {visibleCategories.map((category) => (
+                            <button
+                              key={category._id}
+                              onClick={() => { updateFilter('category', category._id); setShowFilters(false) }}
+                              className={cn(
+                                'flex items-center justify-between px-4 py-3 rounded-xl text-sm font-bold transition-all',
+                                filters.category === category._id ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/20' : 'text-text-secondary hover:bg-muted'
+                              )}
+                            >
+                              {category.name}
+                              {filters.category === category._id && <ChevronRight size={16} />}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Brands in Drawer */}
+                    {visibleBrands.length > 0 && (
+                      <div className="space-y-4">
+                        <h3 className="font-bold text-text-primary uppercase tracking-widest text-xs opacity-50">Brands</h3>
+                        <div className="flex flex-col gap-1">
+                          {visibleBrands.length > 1 && (
+                            <button
+                              onClick={() => { updateFilter('brand', ''); setShowFilters(false) }}
+                              className={cn(
+                                'flex items-center justify-between px-4 py-3 rounded-xl text-sm font-bold transition-all',
+                                !filters.brand ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/20' : 'text-text-secondary hover:bg-muted'
+                              )}
+                            >
+                              All Brands
+                              {!filters.brand && <ChevronRight size={16} />}
+                            </button>
+                          )}
+                          {visibleBrands.map((brand) => (
+                            <button
+                              key={brand._id}
+                              onClick={() => { updateFilter('brand', brand._id); setShowFilters(false) }}
+                              className={cn(
+                                'flex items-center justify-between px-4 py-3 rounded-xl text-sm font-bold transition-all',
+                                filters.brand === brand._id ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/20' : 'text-text-secondary hover:bg-muted'
+                              )}
+                            >
+                              {brand.name}
+                              {filters.brand === brand._id && <ChevronRight size={16} />}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="mt-auto pt-6">
+                    <Button 
+                      className="w-full py-6 rounded-2xl shadow-xl shadow-primary-500/10" 
+                      onClick={() => setShowFilters(false)}
+                    >
+                      Show Results
+                    </Button>
+                  </div>
+                </motion.div>
+              </>
             )}
-          >
+          </AnimatePresence>
+
+          {/* Filters Sidebar (Desktop) */}
+          <div className="hidden lg:block w-64 flex-shrink-0 space-y-6">
             {/* Categories */}
             {visibleCategories.length > 0 && (
               <ScrollReveal>
@@ -388,7 +495,7 @@ const Products = () => {
           {/* Products Grid */}
           <div className="flex-1">
             {loading ? (
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
                 {Array.from({ length: 9 }).map((_, i) => (
                   <ProductCardSkeleton key={i} />
                 ))}
@@ -408,7 +515,7 @@ const Products = () => {
             ) : (
               <>
                 <ScrollReveal delay={0.2}>
-                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+                  <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
                     {products.map((product) => (
                       <ProductCard key={product._id} product={product} />
                     ))}

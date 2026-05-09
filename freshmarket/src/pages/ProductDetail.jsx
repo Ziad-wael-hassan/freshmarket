@@ -231,15 +231,15 @@ export const ProductDetail = () => {
 
               {/* Thumbnail Images */}
               {images.length > 1 && (
-                <div className="flex gap-2 overflow-x-auto">
+                <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 no-scrollbar">
                   {images.map((image, index) => (
                     <button
                       key={index}
                       onClick={() => setSelectedImage(index)}
-                          className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-colors ${
+                      className={`flex-shrink-0 w-20 h-20 rounded-2xl overflow-hidden border-2 transition-all ${
                         selectedImage === index
-                          ? 'border-primary-500'
-                          : 'border-gray-200 dark:border-gray-700'
+                          ? 'border-primary-500 scale-95 shadow-lg shadow-primary-500/20'
+                          : 'border-border-custom hover:border-primary-500/50'
                       }`}
                     >
                       <img
@@ -327,23 +327,23 @@ export const ProductDetail = () => {
               </div>
 
               {/* Quantity Selector */}
-              <div id="product-actions" className="flex items-center gap-4">
-                <span className="font-medium text-gray-900 dark:text-gray-100">Quantity:</span>
-                <div className="flex items-center border border-gray-300 rounded-lg dark:border-gray-600">
+              <div id="product-actions" className="flex flex-col sm:flex-row sm:items-center gap-4">
+                <span className="font-bold text-text-primary uppercase tracking-widest text-xs opacity-50">Quantity</span>
+                <div className="flex items-center bg-muted/50 rounded-xl border border-border-custom overflow-hidden w-fit">
                   <button
                     onClick={() => updateQuantity(-1)}
                     disabled={quantity <= 1}
-                    className="p-2 text-gray-600 hover:text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed dark:text-gray-400 dark:hover:text-gray-100"
+                    className="w-12 h-12 flex items-center justify-center text-text-primary hover:bg-primary-500/10 disabled:opacity-30 transition-colors"
                   >
-                    <MinusIcon size={16} />
+                    <MinusIcon size={18} />
                   </button>
-                  <span className="px-4 py-2 font-medium min-w-[3rem] text-center">{quantity}</span>
+                  <span className="w-12 text-center font-bold text-base text-text-primary">{quantity}</span>
                   <button
                     onClick={() => updateQuantity(1)}
                     disabled={quantity >= (resolvedProduct.quantity || 1)}
-                    className="p-2 text-gray-600 hover:text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed dark:text-gray-400 dark:hover:text-gray-100"
+                    className="w-12 h-12 flex items-center justify-center text-text-primary hover:bg-primary-500/10 disabled:opacity-30 transition-colors"
                   >
-                    <PlusIcon size={16} />
+                    <PlusIcon size={18} />
                   </button>
                 </div>
               </div>
@@ -376,17 +376,23 @@ export const ProductDetail = () => {
 
               {/* Features */}
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                <div className="flex items-center gap-3 rounded-lg border border-gray-200 p-4 dark:border-gray-700">
-                  <Truck className="h-5 w-5 text-primary-600" />
-                  <span className="text-sm font-medium">Free Shipping</span>
+                <div className="flex items-center gap-4 rounded-2xl border border-border-custom bg-muted/30 p-4 transition-colors hover:bg-muted/50">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-500/10 text-primary-500">
+                    <Truck size={20} />
+                  </div>
+                  <span className="text-sm font-bold text-text-primary">Free Shipping</span>
                 </div>
-                <div className="flex items-center gap-3 rounded-lg border border-gray-200 p-4 dark:border-gray-700">
-                  <Shield className="h-5 w-5 text-primary-600" />
-                  <span className="text-sm font-medium">Secure Payment</span>
+                <div className="flex items-center gap-4 rounded-2xl border border-border-custom bg-muted/30 p-4 transition-colors hover:bg-muted/50">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-500/10 text-primary-500">
+                    <Shield size={20} />
+                  </div>
+                  <span className="text-sm font-bold text-text-primary">Secure Payment</span>
                 </div>
-                <div className="flex items-center gap-3 rounded-lg border border-gray-200 p-4 dark:border-gray-700">
-                  <RotateCcw className="h-5 w-5 text-primary-600" />
-                  <span className="text-sm font-medium">Easy Returns</span>
+                <div className="flex items-center gap-4 rounded-2xl border border-border-custom bg-muted/30 p-4 transition-colors hover:bg-muted/50">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-500/10 text-primary-500">
+                    <RotateCcw size={20} />
+                  </div>
+                  <span className="text-sm font-bold text-text-primary">Easy Returns</span>
                 </div>
               </div>
 

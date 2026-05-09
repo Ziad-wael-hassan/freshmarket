@@ -87,33 +87,49 @@ export const Home = () => {
       <Hero />
 
       {/* Features Section */}
-      <section className="py-16">
-        <div className="container-main">
+      <section className="relative py-24 overflow-hidden">
+        {/* Subtle Radial Atmosphere Glow */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary-500/5 blur-[120px] rounded-full pointer-events-none z-0" />
+        
+        <div className="container-main relative z-10">
           <ScrollReveal>
-            <div className="mb-12 text-center">
-              <h2 className="mb-4 text-3xl font-bold text-gray-900 dark:text-gray-100">
+            <div className="mb-16 text-center max-w-2xl mx-auto">
+              <h2 className="mb-4 text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-tight text-text-primary">
                 Why Choose FreshCart?
               </h2>
-              <p className="text-gray-600 dark:text-gray-400">
-                We're committed to providing the best shopping experience
+              <p className="text-base md:text-lg text-text-secondary font-medium leading-relaxed opacity-70">
+                Experience the pinnacle of grocery shopping with our premium service 
+                tailored for your modern lifestyle.
               </p>
             </div>
           </ScrollReveal>
-
-          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
+ 
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
             {features.map((feature, index) => (
               <ScrollReveal key={feature.title} delay={index * 0.1}>
                 <motion.div
-                  whileHover={{ y: -5 }}
-                  className="rounded-xl border border-gray-200 bg-white p-6 text-center shadow-sm transition-all hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
+                  whileHover={{ y: -8, scale: 1.02 }}
+                  className="group relative flex flex-col h-full rounded-[2rem] border border-border-custom bg-surface/40 backdrop-blur-xl p-8 text-center shadow-[0_8px_32px_-12px_rgba(0,0,0,0.1)] transition-all duration-500 hover:shadow-[0_20px_40px_-12px_rgba(0,0,0,0.2)] hover:border-primary-500/50 hover:bg-surface/60 overflow-hidden"
                 >
-                  <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-full bg-primary-100 dark:bg-primary-900">
-                    <feature.icon className="h-6 w-6 text-primary-600 dark:text-primary-400" />
+                  {/* Subtle Inner Glow for Card */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
+                  
+                  {/* Icon Container with Radial Glow */}
+                  <div className="relative mb-8 mx-auto">
+                    {/* Background Radial Glow */}
+                    <div className="absolute inset-0 bg-primary-500/20 blur-2xl rounded-full scale-150 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                    
+                    <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary-400 to-primary-600 text-white shadow-[0_8px_20px_rgba(34,197,94,0.3)] group-hover:shadow-[0_12px_24px_rgba(34,197,94,0.5)] transition-all duration-500">
+                      <feature.icon className="h-8 w-8 transition-transform duration-500 group-hover:scale-110" />
+                    </div>
                   </div>
-                  <h3 className="mb-2 font-semibold text-gray-900 dark:text-gray-100">
+
+                  <h3 className="mb-3 text-xl font-bold text-text-primary tracking-tight">
                     {feature.title}
                   </h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">{feature.description}</p>
+                  <p className="text-sm md:text-base text-text-secondary font-medium leading-relaxed opacity-60 group-hover:opacity-100 transition-opacity duration-500">
+                    {feature.description}
+                  </p>
                 </motion.div>
               </ScrollReveal>
             ))}
@@ -125,17 +141,17 @@ export const Home = () => {
       <section className="bg-gray-50 py-16 dark:bg-gray-900">
         <div className="container-main">
           <ScrollReveal>
-            <div className="mb-12 flex items-center justify-between">
+            <div className="mb-12 flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
               <div>
-                <h2 className="mb-4 text-3xl font-bold text-gray-900 dark:text-gray-100">
+                <h2 className="mb-2 text-3xl font-bold text-gray-900 dark:text-gray-100">
                   Shop by Category
                 </h2>
                 <p className="text-gray-600 dark:text-gray-400">
                   Explore our wide range of product categories
                 </p>
               </div>
-              <Link to="/categories">
-                <Button variant="outline">
+              <Link to="/categories" className="w-full md:w-auto">
+                <Button variant="outline" className="w-full md:w-auto">
                   View All
                   <ArrowRight size={16} className="ml-2" />
                 </Button>
@@ -153,22 +169,22 @@ export const Home = () => {
                     <Link to={`/products?category=${category._id}`}>
                       <motion.div
                         whileHover={{ scale: 1.05 }}
-                        className="group aspect-square overflow-hidden rounded-xl bg-white shadow-sm transition-all hover:shadow-md dark:bg-gray-800"
+                        className="group aspect-square overflow-hidden rounded-2xl bg-white shadow-sm transition-all hover:shadow-lg dark:bg-gray-800 border border-border-custom h-full flex flex-col"
                       >
-                        <div className="flex h-full items-center justify-center p-6">
+                        <div className="flex flex-1 items-center justify-center p-6">
                           <div className="text-center">
-                            <div className="mb-3 text-4xl">
+                            <div className="mb-4 transform transition-transform group-hover:scale-110 duration-500">
                               {category.image ? (
                                 <img
                                   src={category.image}
                                   alt={category.name}
-                                  className="h-16 w-16 rounded-lg object-cover"
+                                  className="h-16 w-16 md:h-20 md:w-20 rounded-2xl object-cover shadow-sm mx-auto"
                                 />
                               ) : (
-                                '📦'
+                                <span className="text-5xl block">📦</span>
                               )}
                             </div>
-                            <h3 className="font-medium text-gray-900 dark:text-gray-100">
+                            <h3 className="text-sm md:text-base font-bold text-gray-900 dark:text-gray-100 line-clamp-1">
                               {category.name}
                             </h3>
                           </div>
@@ -185,17 +201,17 @@ export const Home = () => {
       <section className="py-16">
         <div className="container-main">
           <ScrollReveal>
-            <div className="mb-12 flex items-center justify-between">
+            <div className="mb-12 flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
               <div>
-                <h2 className="mb-4 text-3xl font-bold text-gray-900 dark:text-gray-100">
+                <h2 className="mb-2 text-3xl font-bold text-gray-900 dark:text-gray-100">
                   Featured Products
                 </h2>
                 <p className="text-gray-600 dark:text-gray-400">
                   Discover our most popular and trending products
                 </p>
               </div>
-              <Link to="/products">
-                <Button variant="outline">
+              <Link to="/products" className="w-full md:w-auto">
+                <Button variant="outline" className="w-full md:w-auto">
                   View All
                   <ArrowRight size={16} className="ml-2" />
                 </Button>
@@ -204,13 +220,13 @@ export const Home = () => {
           </ScrollReveal>
 
           {loading ? (
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {Array.from({ length: 8 }).map((_, i) => (
                 <ProductCardSkeleton key={i} />
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {featuredProducts.map((product, index) => (
                 <ScrollReveal key={product._id} delay={index * 0.1}>
                   <ProductCard product={product} />

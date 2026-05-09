@@ -20,6 +20,15 @@
   height: 64px;
 }
 
+@media (max-width: 767px) {
+  .nav-wrapper {
+    height: 64px;
+  }
+  .nav-wrapper.scrolled {
+    height: 64px;
+  }
+}
+
 .nav-container {
   max-width: 1280px;
   margin: 0 auto;
@@ -28,6 +37,13 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+@media (max-width: 767px) {
+  .nav-container {
+    padding: 0 16px;
+    gap: 8px;
+  }
 }
 
 
@@ -80,6 +96,12 @@
   display: flex;
   align-items: center;
   gap: 20px;
+}
+
+@media (max-width: 767px) {
+  .nav-actions {
+    gap: 4px;
+  }
 }
 
 .nav-icon-btn {

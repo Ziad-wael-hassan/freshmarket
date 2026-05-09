@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link, NavLink } from 'react-router-dom'
-import { motion, useScroll, useMotionValueEvent } from 'framer-motion'
+import { motion, useScroll, useMotionValueEvent, AnimatePresence } from 'framer-motion'
 import {
   ShoppingCart,
   Heart,
@@ -8,6 +8,7 @@ import {
   Menu,
   User,
   LogOut,
+  X,
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { useCart } from '@/hooks/useCart'
@@ -23,6 +24,7 @@ export const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isCartDrawerOpen, setIsCartDrawerOpen] = useState(false)
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   const { scrollY } = useScroll()
   const { user, token, isAuthenticated, isLoading, authInitialized, logout } = useAuth()
@@ -58,14 +60,23 @@ export const Navbar = () => {
   return (
     <header className={cn('nav-wrapper', isScrolled && 'scrolled')}>
       <div className="nav-container">
+        {/* Mobile Menu Button - Left on mobile */}
+        <button 
+          onClick={() => setIsMobileMenuOpen(true)}
+          className="nav-icon-btn md:hidden -ml-2"
+          aria-label="Open menu"
+        >
+          <Menu size={24} />
+        </button>
+
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-2.5 group transition-transform duration-300 hover:scale-[1.02]">
+        <Link to="/" className="flex items-center gap-2 group transition-transform duration-300 hover:scale-[1.02] mr-auto md:mr-0">
           <img 
             src="/branding/green-cart.svg" 
             alt="FreshCart Logo" 
-            className="h-8 w-auto object-contain drop-shadow-sm group-hover:drop-shadow-[0_0_8px_rgba(34,197,94,0.4)] transition-all duration-300 dark:drop-shadow-[0_0_6px_rgba(34,197,94,0.3)]" 
+            className="h-7 md:h-8 w-auto object-contain drop-shadow-sm group-hover:drop-shadow-[0_0_8px_rgba(34,197,94,0.4)] transition-all duration-300 dark:drop-shadow-[0_0_6px_rgba(34,197,94,0.3)]" 
           />
-          <span className="text-xl font-extrabold tracking-tight text-text-primary group-hover:text-primary-500 transition-colors drop-shadow-sm dark:text-white">
+          <span className="text-lg md:text-xl font-extrabold tracking-tight text-text-primary group-hover:text-primary-500 transition-colors drop-shadow-sm dark:text-white hidden xs:block">
             FreshCart
           </span>
         </Link>
@@ -106,8 +117,8 @@ export const Navbar = () => {
             )}
           </button>
 
-          {/* History/Orders */}
-          <Link to="/orders" className="nav-icon-btn" aria-label="Orders">
+          {/* History/Orders - Hidden on small mobile */}
+          <Link to="/orders" className="nav-icon-btn hidden sm:flex" aria-label="Orders">
             <History size={22} />
           </Link>
 
@@ -205,17 +216,85 @@ export const Navbar = () => {
               </div>
             </div>
           ) : (
-            <Link to="/login" className="nav-login-btn ml-2 bg-text-primary text-main hover:opacity-90 font-bold px-6 rounded-full transition-all duration-300 hover:shadow-lg hover:shadow-primary-500/20">
+            <Link to="/login" className="nav-login-btn ml-2 bg-text-primary text-main hover:opacity-90 font-bold px-6 rounded-full transition-all duration-300 hover:shadow-lg hover:shadow-primary-500/20 hidden md:flex">
               Log In
             </Link>
           )}
-
-          {/* Mobile Menu (Simplified for this redesign) */}
-          <button className="nav-icon-btn md:hidden">
-            <Menu size={22} />
-          </button>
         </div>
       </div>
+
+      {/* Mobile Navigation Drawer */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="fixed inset-0 z-[2000] bg-black/60 backdrop-blur-sm md:hidden"
+            />
+            <motion.div
+              initial={{ x: '-100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '-100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed bottom-0 left-0 top-0 z-[2001] w-[280px] bg-surface p-6 shadow-2xl md:hidden flex flex-col"
+            >
+              <div className="flex items-center justify-between mb-10">
+                <Link to="/" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2">
+                  <img src="/branding/green-cart.svg" alt="Logo" className="h-7 w-auto" />
+                  <span className="text-lg font-black text-text-primary">FreshCart</span>
+                </Link>
+                <button 
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="p-2 rounded-full hover:bg-muted transition-colors"
+                >
+                  <X size={24} />
+                </button>
+              </div>
+
+              <nav className="flex flex-col gap-2">
+                {navLinks.map((link) => (
+                  <NavLink
+                    key={link.to}
+                    to={link.to}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={({ isActive }) => cn(
+                      'flex items-center px-4 py-4 rounded-2xl text-base font-bold transition-all',
+                      isActive 
+                        ? 'bg-primary-500/10 text-primary-500' 
+                        : 'text-text-secondary hover:bg-muted hover:text-text-primary'
+                    )}
+                  >
+                    {link.label}
+                  </NavLink>
+                ))}
+              </nav>
+
+              <div className="mt-auto pt-10 space-y-4">
+                <Link 
+                  to="/orders" 
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-text-secondary hover:bg-muted transition-all"
+                >
+                  <History size={18} />
+                  My Orders
+                </Link>
+                {!isLoggedIn && (
+                  <Link 
+                    to="/login" 
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="flex items-center justify-center w-full py-4 rounded-2xl bg-text-primary text-main font-bold shadow-lg shadow-primary-500/10"
+                  >
+                    Sign In
+                  </Link>
+                )}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* Cart Drawer */}
       <CartDrawer isOpen={isCartDrawerOpen} onClose={() => setIsCartDrawerOpen(false)} />
