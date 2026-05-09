@@ -24,17 +24,24 @@ app.use(morgan('dev'))
 // Firebase Admin Initialization
 let isFirebaseInitialized = false
 try {
-  const serviceAccount = JSON.parse(
-    fs.readFileSync('./serviceAccountKey.json', 'utf8')
-  )
+  const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT
+    ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)
+    : fs.existsSync('./serviceAccountKey.json')
+    ? JSON.parse(fs.readFileSync('./serviceAccountKey.json', 'utf8'))
+    : null;
 
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-  })
-  isFirebaseInitialized = true
-  console.log('✅ Firebase Admin initialized successfully')
+  if (serviceAccount) {
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount),
+      databaseURL: "https://c0llege-alert-default-rtdb.firebaseio.com"
+    });
+    isFirebaseInitialized = true;
+    console.log('✅ Firebase Admin initialized successfully');
+  } else {
+    console.warn('⚠️ Firebase Admin not initialized: No service account found');
+  }
 } catch (error) {
-  console.error('❌ Firebase Admin initialization failed:', error.message)
+  console.error('❌ Firebase Admin initialization failed:', error.message);
 }
 
 // Health check
@@ -177,3 +184,5 @@ const PORT = process.env.PORT || 5000
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`)
 })
+
+export default app
