@@ -13,7 +13,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { User as UserIcon, Mail, Phone, Calendar, Edit3, ShoppingBag, Heart, Package, Star } from 'lucide-react'
-import { formatDate } from '@/utils/formatters'
+import { normalizeUser, unwrapApiCollection } from '@/utils/apiData'
 import toast from 'react-hot-toast'
 
 const profileSchema = z.object({
@@ -62,23 +62,39 @@ const StatCard = ({ icon: Icon, label, value, delay = 0 }) => {
 export const Profile = () => {
   const { user, updateProfile } = useAuth()
   const { itemIds: wishlistItems } = useWishlist()
-  const { items: cartItems } = useCart()
+  const { totalItems: cartItemCount } = useCart()
   const [ordersCount, setOrdersCount] = useState(0)
   const [isEditing, setIsEditing] = useState(false)
   const [loading, setLoading] = useState(false)
 
+  const memberSince = user?.createdAt
+    ? new Date(user.createdAt).toLocaleDateString()
+    : '—'
+  const profileInitial = user?.name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || 'U'
+
   useEffect(() => {
     if (!user?._id) return
+
+    let isMounted = true
+
     const fetchStats = async () => {
       try {
         const response = await orderService.getUserOrders(user._id)
-        const orders = response.data?.data || response.data || []
-        setOrdersCount(orders.length)
-      } catch (error) {
-        console.error('Failed to fetch profile stats:', error)
+        const orders = unwrapApiCollection(response)
+        if (isMounted) {
+          setOrdersCount(orders.length)
+        }
+      } catch {
+        if (isMounted) {
+          setOrdersCount(0)
+        }
       }
     }
     fetchStats()
+
+    return () => {
+      isMounted = false
+    }
   }, [user?._id])
 
   const {
@@ -95,10 +111,24 @@ export const Profile = () => {
     },
   })
 
+  useEffect(() => {
+    reset({
+      name: user?.name || '',
+      email: user?.email || '',
+      phone: user?.phone || '',
+    })
+  }, [reset, user?.email, user?.name, user?.phone])
+
   const onSubmit = async (data) => {
     setLoading(true)
     try {
-      await updateProfile(data)
+      const updatedProfile = await updateProfile(data)
+      const normalizedUser = normalizeUser(updatedProfile)
+      reset({
+        name: normalizedUser?.name || data.name,
+        email: normalizedUser?.email || data.email,
+        phone: normalizedUser?.phone || data.phone || '',
+      })
       setIsEditing(false)
       toast.success('Profile updated successfully')
     } catch (error) {
@@ -113,7 +143,7 @@ export const Profile = () => {
     setIsEditing(false)
   }
 
-  if (!user) {
+  if (!user?._id) {
     return (
       <div className="container-main py-32 text-center">
         <div className="skeleton-shimmer h-8 w-48 mx-auto rounded mb-4" />
@@ -148,7 +178,7 @@ export const Profile = () => {
                 <div className="mb-8 flex items-center justify-between">
                   <div className="flex items-center gap-4">
                     <div className="h-16 w-16 rounded-full bg-primary-500 flex items-center justify-center text-white text-2xl font-bold border-4 border-muted">
-                      {user.name?.charAt(0).toUpperCase()}
+                      {profileInitial}
                     </div>
                     <div>
                       <h2 className="text-2xl font-bold text-text-primary">Personal Profile</h2>
@@ -243,7 +273,7 @@ export const Profile = () => {
                           <Calendar className="h-5 w-5 text-primary-500" />
                           <div>
                             <p className="text-[10px] text-text-secondary uppercase font-bold">Member Since</p>
-                            <p className="font-semibold text-text-primary">{formatDate(user.createdAt)}</p>
+                            <p className="font-semibold text-text-primary">{memberSince}</p>
                           </div>
                         </div>
                         {user.phone && (
@@ -299,7 +329,7 @@ export const Profile = () => {
             <h3 className="text-xl font-bold text-text-primary mb-4 px-1">Overview</h3>
             <StatCard icon={Package} label="Total Orders" value={ordersCount} delay={0.1} />
             <StatCard icon={Heart} label="Wishlist" value={wishlistItems.length} delay={0.2} />
-            <StatCard icon={ShoppingBag} label="Cart Items" value={cartItems.length} delay={0.3} />
+            <StatCard icon={ShoppingBag} label="Cart Items" value={cartItemCount} delay={0.3} />
             <StatCard icon={Star} label="Reviews" value={0} delay={0.4} />
             
             <div className="mt-8 p-6 rounded-3xl bg-primary-500/5 border border-primary-500/10 relative overflow-hidden">
