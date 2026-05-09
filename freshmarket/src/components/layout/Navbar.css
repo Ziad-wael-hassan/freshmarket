@@ -1,0 +1,129 @@
+.nav-wrapper {
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-color);
+  height: 72px;
+  display: flex;
+  align-items: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  font-family: 'DM Sans', sans-serif;
+  transition: all 0.3s ease;
+}
+
+.nav-wrapper.scrolled {
+  box-shadow: 0 4px 20px -2px rgba(0,0,0,0.1);
+  height: 64px;
+}
+
+.nav-container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 24px;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+
+/* Navigation Links */
+.nav-links {
+  display: flex;
+  gap: 32px;
+}
+
+.nav-link {
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-primary);
+  position: relative;
+  padding: 4px 0;
+  transition: all 0.3s ease;
+}
+
+.nav-link:hover {
+  color: var(--color-green-accent);
+}
+
+.nav-link::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: var(--color-green-accent);
+  transition: width 0.3s ease;
+  border-radius: 100px;
+}
+
+.nav-link:hover::after {
+  width: 100%;
+}
+
+/* Right Actions */
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.nav-icon-btn {
+  background: none;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.nav-icon-btn:hover {
+  color: var(--color-green-accent);
+}
+
+.nav-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background: var(--color-green-accent);
+  color: white;
+  font-size: 10px;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+
+.nav-login-btn {
+  background: var(--color-green-dark);
+  color: white;
+  text-decoration: none;
+  padding: 10px 24px;
+  border-radius: 100px;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.nav-login-btn:hover {
+  background: var(--color-green-accent);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(60, 181, 80, 0.2);
+}
+
+@media (max-width: 767px) {
+  .nav-links {
+    display: none;
+  }
+}
