@@ -1,5 +1,6 @@
 import { ScrollReveal } from '@/components/common/ScrollReveal'
 import { CheckCircle } from 'lucide-react'
+import './Testimonials.css'
 
 const testimonials = [
   {
@@ -25,9 +26,9 @@ const testimonials = [
   }
 ]
 
-const StarRating = ({ rating }) => {
+const StarRating = () => {
   return (
-    <div className="flex gap-[2px] mb-4">
+    <div className="testimonial-stars">
       {[...Array(5)].map((_, i) => (
         <svg 
           key={i} 
@@ -44,50 +45,48 @@ const StarRating = ({ rating }) => {
 
 export const Testimonials = () => {
   return (
-    <section className="py-[80px]">
-      <div className="max-w-[1280px] mx-auto px-4">
-        <ScrollReveal>
-          <p className="text-center text-[11px] text-[#3cb550] uppercase tracking-[2px] mb-3 font-['DM_Sans']">
-            Reviews
+    <section className="testimonials-section">
+      <div className="testimonials-container">
+        <ScrollReveal className="testimonials-header">
+          <p className="text-[#3cb550] text-[12px] uppercase tracking-[3px] mb-3 font-semibold">
+            Testimonials
           </p>
-          <h2 className="text-center text-[36px] text-white font-['Fraunces'] font-bold mb-12">
-            What our customers say
+          <h2 className="text-[clamp(2rem,4vw,3rem)] text-white font-['Fraunces'] font-bold leading-tight">
+            What our <em className="italic font-medium text-[#3cb550]">customers</em> say
           </h2>
         </ScrollReveal>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-[24px]">
+        <div className="testimonials-grid">
           {testimonials.map((testimonial, index) => (
-            <ScrollReveal key={testimonial.name} delay={index * 0.1}>
-              <div 
-                className="bg-[#161b27] border border-[rgba(255,255,255,0.06)] rounded-[16px] p-[28px]"
-              >
-                <StarRating rating={testimonial.rating} />
+            <ScrollReveal 
+              key={testimonial.name} 
+              delay={index * 0.15}
+              className="h-full"
+            >
+              <div className="testimonial-card">
+                <StarRating />
                 
-                <p className="font-['DM_Sans'] text-[15px] text-[#d1d5db] leading-[1.7] italic mb-5">
-                  <span className="text-[#3cb550] text-[24px]">"</span>
-                  {testimonial.quote}
-                  <span className="text-[#3cb550] text-[24px]">"</span>
-                </p>
+                <div className="testimonial-quote-wrapper">
+                  <span className="testimonial-quote-icon">“</span>
+                  <p className="testimonial-quote">
+                    {testimonial.quote}
+                  </p>
+                </div>
                 
-                <div className="border-t border-[rgba(255,255,255,0.06)] my-5" />
+                <hr className="testimonial-divider" />
                 
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div 
-                      className="w-9 h-9 rounded-full flex items-center justify-center text-white text-[13px] font-bold"
-                      style={{
-                        background: 'linear-gradient(135deg, #1a4d2e 0%, #3cb550 100%)'
-                      }}
-                    >
+                <div className="testimonial-footer">
+                  <div className="reviewer-info">
+                    <div className="reviewer-avatar">
                       {testimonial.initials}
                     </div>
-                    <div>
-                      <p className="text-white text-[14px] font-semibold">{testimonial.name}</p>
-                      <p className="text-[#6b7280] text-[12px]">{testimonial.location}</p>
+                    <div className="reviewer-details">
+                      <span className="reviewer-name">{testimonial.name}</span>
+                      <span className="reviewer-location">{testimonial.location}</span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1 text-[#3cb550] text-[11px]">
-                    <CheckCircle size={12} />
+                  <div className="verified-badge">
+                    <CheckCircle size={12} strokeWidth={2.5} />
                     <span>Verified</span>
                   </div>
                 </div>
