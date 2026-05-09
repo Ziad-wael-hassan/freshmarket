@@ -4,7 +4,7 @@ import { Helmet } from 'react-helmet-async'
 import { motion } from 'framer-motion'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Mail, Lock } from 'lucide-react'
+import { Mail, Lock, Eye, EyeOff } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
@@ -36,6 +36,7 @@ const Login = () => {
   const location = useLocation()
   const { login, loginWithGoogle, isAuthenticated, isLoading, authInitialized } = useAuth()
   const [isLoggingInWithGoogle, setIsLoggingInWithGoogle] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
   const returnUrl = location.state?.returnUrl || '/'
 
   const {
@@ -108,16 +109,29 @@ const Login = () => {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium text-text-primary">Password</label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium text-text-primary">Password</label>
+                <Link to="/forgot-password" className="text-xs text-primary-500 hover:text-primary-600 font-medium">
+                  Forgot Password?
+                </Link>
+              </div>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
                 <Input
                   {...register('password')}
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   placeholder="Enter your password"
-                  className="pl-10"
+                  className="pl-10 pr-10"
                   error={errors.password?.message}
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
               </div>
             </div>
 

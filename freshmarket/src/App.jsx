@@ -20,6 +20,8 @@ const Orders = lazy(() => import('./pages/Orders'))
 const OrderDetail = lazy(() => import('./pages/OrderDetail'))
 const Profile = lazy(() => import('./pages/Profile'))
 const Login = lazy(() => import('./pages/auth/Login'))
+const Register = lazy(() => import('./pages/auth/Register'))
+const ForgotPassword = lazy(() => import('./pages/auth/ForgotPassword'))
 const ResetPassword = lazy(() => import('./pages/auth/ResetPassword'))
 const Support = lazy(() => import('./pages/Support'))
 const Help = lazy(() => import('./pages/Help'))
@@ -58,14 +60,7 @@ export default function App() {
             <Route path="categories" element={<Categories />} />
             <Route path="brands" element={<Brands />} />
 
-            <Route
-              path="cart"
-              element={
-                <ProtectedRoute>
-                  <Cart />
-                </ProtectedRoute>
-              }
-            />
+            <Route path="cart" element={<Cart />} />
             <Route
               path="checkout/:cartId"
               element={
@@ -127,6 +122,22 @@ export default function App() {
             element={
               <GuestRoute>
                 <Login />
+              </GuestRoute>
+            }
+          />
+          <Route
+            path="register"
+            element={
+              <GuestRoute>
+                <Register />
+              </GuestRoute>
+            }
+          />
+          <Route
+            path="forgot-password"
+            element={
+              <GuestRoute>
+                <ForgotPassword />
               </GuestRoute>
             }
           />
