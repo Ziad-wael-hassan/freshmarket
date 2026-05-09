@@ -18,6 +18,8 @@ import {
   updateLocalCartQuantity,
 } from '@/utils/localCart'
 import { normalizeProduct } from '@/utils/apiData'
+import { extractErrorMessage } from '@/utils/extractErrorMessage'
+import toast from 'react-hot-toast'
 
 const GUEST_CART_KEY = 'freshcart-guest-cart'
 
@@ -105,7 +107,9 @@ export const useCart = () => {
 
         return { success: true }
       } catch (error) {
-        return { success: false, error }
+        const message = extractErrorMessage(error)
+        toast.error(message)
+        return { success: false, error: message }
       }
     },
     [dispatch, isAuthenticated]
@@ -135,7 +139,9 @@ export const useCart = () => {
         await dispatch(updateCartItem({ cartItemId, fallbackId, count })).unwrap()
         return { success: true }
       } catch (error) {
-        return { success: false, error }
+        const message = extractErrorMessage(error)
+        toast.error(message)
+        return { success: false, error: message }
       }
     },
     [dispatch, isAuthenticated]
@@ -165,7 +171,9 @@ export const useCart = () => {
         await dispatch(removeFromCart({ cartItemId, fallbackId })).unwrap()
         return { success: true }
       } catch (error) {
-        return { success: false, error }
+        const message = extractErrorMessage(error)
+        toast.error(message)
+        return { success: false, error: message }
       }
     },
     [dispatch, isAuthenticated]
@@ -181,7 +189,9 @@ export const useCart = () => {
       await dispatch(clearCartItems()).unwrap()
       return { success: true }
     } catch (error) {
-      return { success: false, error }
+      const message = extractErrorMessage(error)
+      toast.error(message)
+      return { success: false, error: message }
     }
   }, [dispatch, isAuthenticated])
 

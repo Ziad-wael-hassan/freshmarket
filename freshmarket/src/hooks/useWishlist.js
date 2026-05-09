@@ -1,69 +1,126 @@
 import { useCallback } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
+import { useLocation, useNavigate } from 'react-router-dom'
+import { toast } from 'react-hot-toast'
 import { toggleWishlist, fetchWishlist } from '@/features/wishlist/wishlistSlice'
+import { useAuth } from '@/context/AuthContext'
+import { extractErrorMessage } from '@/utils/extractErrorMessage'
+
+const guestWishlistState = {
+  items: [],
+  itemIds: [],
+  count: 0,
+  loading: false,
+  error: null,
+}
 
 export const useWishlist = () => {
   const dispatch = useDispatch()
+  const navigate = useNavigate()
+  const location = useLocation()
   const wishlist = useSelector((state) => state.wishlist)
+  const { isAuthenticated } = useAuth()
+
+  const requireAuthenticatedWishlist = useCallback(() => {
+    if (isAuthenticated) {
+      return true
+    }
+
+    toast.error('Please log in to manage your wishlist.')
+    navigate('/login', {
+      state: {
+        returnUrl: `${location.pathname}${location.search}`,
+      },
+    })
+
+    return false
+  }, [isAuthenticated, location.pathname, location.search, navigate])
 
   const toggleItem = useCallback(
     async (productId) => {
+      if (!requireAuthenticatedWishlist()) {
+        return { success: false, requiresAuth: true }
+      }
+
       const isWishlisted = wishlist.itemIds.includes(productId)
       try {
         await dispatch(toggleWishlist({ productId, isWishlisted })).unwrap()
         return { success: true }
       } catch (error) {
-        return { success: false, error }
+        const message = extractErrorMessage(error)
+        toast.error(message)
+        return { success: false, error: message }
       }
     },
-    [dispatch, wishlist.itemIds]
+    [dispatch, requireAuthenticatedWishlist, wishlist.itemIds]
   )
 
   const removeItem = useCallback(
     async (productId) => {
+      if (!requireAuthenticatedWishlist()) {
+        return { success: false, requiresAuth: true }
+      }
+
       try {
         await dispatch(toggleWishlist({ productId, isWishlisted: true })).unwrap()
         return { success: true }
       } catch (error) {
-        return { success: false, error }
+        const message = extractErrorMessage(error)
+        toast.error(message)
+        return { success: false, error: message }
       }
     },
-    [dispatch]
+    [dispatch, requireAuthenticatedWishlist]
   )
 
   const clearWishlist = useCallback(async () => {
+    if (!requireAuthenticatedWishlist()) {
+      return { success: false, requiresAuth: true }
+    }
+
     try {
       for (const item of wishlist.items) {
-        const id = item._id || item
+        const id = item._id || item.id || item
         await dispatch(toggleWishlist({ productId: id, isWishlisted: true })).unwrap()
       }
       return { success: true }
     } catch (error) {
-      return { success: false, error }
+      const message = extractErrorMessage(error)
+      toast.error(message)
+      return { success: false, error: message }
     }
-  }, [dispatch, wishlist.items])
+  }, [dispatch, requireAuthenticatedWishlist, wishlist.items])
 
   const isInWishlist = useCallback(
     (productId) => {
+      if (!isAuthenticated) {
+        return false
+      }
+
       return wishlist.itemIds.includes(productId)
     },
-    [wishlist.itemIds]
+    [isAuthenticated, wishlist.itemIds]
   )
 
   const refreshWishlist = useCallback(() => {
-    dispatch(fetchWishlist())
-  }, [dispatch])
+    if (isAuthenticated) {
+      dispatch(fetchWishlist())
+    }
+  }, [dispatch, isAuthenticated])
+
+  const resolvedWishlist = isAuthenticated ? wishlist : guestWishlistState
 
   return {
-    wishlist,
+    wishlist: resolvedWishlist,
     toggleItem,
     removeItem,
     clearWishlist,
     isInWishlist,
     refreshWishlist,
-    isLoading: wishlist.loading,
-    loading: wishlist.loading,
-    items: wishlist.items,
-    itemIds: wishlist.itemIds,
+    isLoading: resolvedWishlist.loading,
+    loading: resolvedWishlist.loading,
+    items: resolvedWishlist.items,
+    itemIds: resolvedWishlist.itemIds,
+    count: resolvedWishlist.count,
   }
 }
