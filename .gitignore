@@ -1,3 +1,4 @@
 .aidesigner/*
 !.aidesigner/.gitkeep
 backend/serviceAccountKey.json
+backend/serviceAccountKey.json
