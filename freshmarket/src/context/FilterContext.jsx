@@ -1,90 +1,94 @@
-import { createContext, useContext, useState, useEffect, useMemo } from 'react'
+import { createContext, useContext, useState, useEffect } from 'react'
 import { categoryService } from '@/services/categoryService'
 import { brandService } from '@/services/brandService'
-import { productService } from '@/services/productService'
+import { unwrapApiCollection } from '@/utils/apiData'
+import toast from 'react-hot-toast'
+
+let cachedCategories = null
+let cachedBrands = null
+let cacheError = false
 
 const FilterContext = createContext({
   categories: [],
   brands: [],
   activeCategories: [],
   activeBrands: [],
-  loading: true
+  loading: true,
 })
 
 export const FilterProvider = ({ children }) => {
-  const [categories, setCategories] = useState([])
-  const [brands, setBrands] = useState([])
-  const [activeCategoryIds, setActiveCategoryIds] = useState(new Set())
-  const [activeBrandIds, setActiveBrandIds] = useState(new Set())
+  const [categories, setCategories] = useState(cachedCategories || [])
+  const [brands, setBrands] = useState(cachedBrands || [])
   const [loading, setLoading] = useState(true)
 
+  const activeCategories = categories
+  const activeBrands = brands
+
   useEffect(() => {
+    if (cachedCategories && cachedBrands && !cacheError) {
+      setCategories(cachedCategories)
+      setBrands(cachedBrands)
+      setLoading(false)
+      return
+    }
+
+    if (cacheError) {
+      cacheError = false
+    }
+
+    let isMounted = true
+
     const fetchDiscoveryData = async () => {
       try {
         setLoading(true)
-        console.log('FilterContext: Starting discovery fetch...')
-        
-        const [categoriesRes, brandsRes, productsRes] = await Promise.all([
-          categoryService.getAll().catch(e => ({ data: { data: [] } })),
-          brandService.getAll().catch(e => ({ data: { data: [] } })),
-          productService.getAll({ limit: 1000 }).catch(e => ({ data: { data: [] } })),
+
+        const [categoriesRes, brandsRes] = await Promise.all([
+          categoryService.getAll(),
+          brandService.getAll(),
         ])
 
-        const categoriesData = categoriesRes.data?.data || categoriesRes.data || []
-        const brandsData = brandsRes.data?.data || brandsRes.data || []
-        const productsData = productsRes.data?.data || productsRes.data || []
-
-        console.log(`FilterContext: Fetched ${categoriesData.length} categories, ${brandsData.length} brands, ${productsData.length} products`)
-
-        setCategories(Array.isArray(categoriesData) ? categoriesData : [])
-        setBrands(Array.isArray(brandsData) ? brandsData : [])
-
-        const catIds = new Set()
-        const brIds = new Set()
-
-        if (Array.isArray(productsData)) {
-          productsData.forEach((product) => {
-            if (product?.category) {
-              const id = typeof product.category === 'object' ? product.category._id : product.category
-              if (id) catIds.add(id)
-            }
-            if (product?.brand) {
-              const id = typeof product.brand === 'object' ? product.brand._id : product.brand
-              if (id) brIds.add(id)
-            }
-          })
+        if (!isMounted) {
+          return
         }
 
-        setActiveCategoryIds(catIds)
-        setActiveBrandIds(brIds)
-      } catch (err) {
-        console.error('FilterContext: Critical failure during discovery:', err)
+        const fetchedCategories = unwrapApiCollection(categoriesRes)
+        const fetchedBrands = unwrapApiCollection(brandsRes)
+
+        cachedCategories = fetchedCategories
+        cachedBrands = fetchedBrands
+        cacheError = false
+
+        setCategories(fetchedCategories)
+        setBrands(fetchedBrands)
+      } catch {
+        cacheError = true
+        if (isMounted) {
+          toast.error('Failed to load filters — please refresh')
+        }
       } finally {
-        setLoading(false)
+        if (isMounted) {
+          setLoading(false)
+        }
       }
     }
 
     fetchDiscoveryData()
+
+    return () => {
+      isMounted = false
+    }
   }, [])
 
-  const activeCategories = useMemo(() => {
-    if (!Array.isArray(categories)) return []
-    return categories.filter((c) => activeCategoryIds.has(c?._id))
-  }, [categories, activeCategoryIds])
-
-  const activeBrands = useMemo(() => {
-    if (!Array.isArray(brands)) return []
-    return brands.filter((b) => activeBrandIds.has(b?._id))
-  }, [brands, activeBrandIds])
-
   return (
-    <FilterContext.Provider value={{ 
-      categories, 
-      brands, 
-      activeCategories, 
-      activeBrands, 
-      loading 
-    }}>
+    <FilterContext.Provider
+      value={{
+        categories,
+        brands,
+        activeCategories,
+        activeBrands,
+        loading,
+      }}
+    >
       {children}
     </FilterContext.Provider>
   )

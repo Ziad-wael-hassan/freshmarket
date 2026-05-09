@@ -1,4 +1,6 @@
 import axios from 'axios'
+import { API } from '@/constants/api'
+import { authDebug, getAuthToken, notifyUnauthorized } from './authSession'
 
 /**
  * Axios instance with custom configuration and interceptors
@@ -16,18 +18,22 @@ const axiosInstance = axios.create({
  * These are public endpoints that work for guest users
  */
 const ignored401Endpoints = [
-  '/api/v1/products',
-  '/api/v1/categories',
-  '/api/v1/brands',
-  '/api/v1/wishlist', // Allow guests to have empty wishlist
-  '/api/v1/cart', // Allow guests to use cart
+  API.AUTH.SIGNIN,
+  API.AUTH.SIGNUP,
+  API.AUTH.FORGOT_PASSWORD,
+  API.AUTH.VERIFY_RESET_CODE,
+  API.AUTH.RESET_PASSWORD,
+  API.PRODUCTS.LIST,
+  API.CATEGORIES.LIST,
+  API.BRANDS.LIST,
+  API.CART.GET,
 ]
 
 /**
  * Check if endpoint should ignore 401 errors
  */
 const shouldIgnore401 = (url) => {
-  return ignored401Endpoints.some(endpoint => url.includes(endpoint))
+  return typeof url === 'string' && ignored401Endpoints.some((endpoint) => url.endsWith(endpoint) || url === endpoint)
 }
 
 /**
@@ -40,9 +46,13 @@ let isHandlingUnauthorized = false
  */
 axiosInstance.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token')
+    const token = getAuthToken()
     if (token) {
+      config.headers.token = token
       config.headers.Authorization = `Bearer ${token}`
+    } else {
+      delete config.headers.token
+      delete config.headers.Authorization
     }
     return config
   },
@@ -59,8 +69,10 @@ axiosInstance.interceptors.response.use(
     return response
   },
   (error) => {
+    const activeToken = getAuthToken()
+
     // Skip handling for ignored endpoints
-    if (shouldIgnore401(error.config?.url)) {
+    if (error.config?.skipUnauthorizedHandling || shouldIgnore401(error.config?.url) || !activeToken) {
       return Promise.reject(error)
     }
 
@@ -73,16 +85,17 @@ axiosInstance.interceptors.response.use(
 
       isHandlingUnauthorized = true
 
-      // Clear stored token
-      localStorage.removeItem('token')
-
-      // Dispatch custom event for React to handle
-      // This preserves SPA behavior instead of full page reload
-      if (import.meta.env.DEV) {
-        console.log('[Auth] 401 received on protected endpoint, dispatching unauthorized event')
-      }
-
-      window.dispatchEvent(new CustomEvent('auth:unauthorized'))
+      console.log('[401 intercepted]', error.config?.url || 'unknown')
+      authDebug('axios intercepted 401', {
+        url: error.config?.url || 'unknown',
+        method: error.config?.method || 'get',
+      })
+      notifyUnauthorized({
+        reason: 'request-401',
+        status: 401,
+        url: error.config?.url || 'unknown',
+        method: error.config?.method || 'get',
+      })
 
       // Reset flag after a delay to allow subsequent unauthorized events
       setTimeout(() => {
@@ -94,9 +107,6 @@ axiosInstance.interceptors.response.use(
 
     // Handle 403 - Forbidden
     if (error.response?.status === 403) {
-      if (import.meta.env.DEV) {
-        console.error('[Auth] Access forbidden')
-      }
       return Promise.reject(error)
     }
 
