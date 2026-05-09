@@ -50,6 +50,21 @@ export const Navbar = () => {
     setIsScrolled(latest > 80)
   })
 
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = 'hidden'
+      document.body.style.paddingRight = 'var(--scrollbar-width, 0px)' // Prevent layout shift
+    } else {
+      document.body.style.overflow = ''
+      document.body.style.paddingRight = ''
+    }
+    return () => {
+      document.body.style.overflow = ''
+      document.body.style.paddingRight = ''
+    }
+  }, [isMobileMenuOpen])
+
   const navLinks = [
     { to: '/', label: 'Home' },
     { to: '/products', label: 'Products' },
@@ -63,7 +78,7 @@ export const Navbar = () => {
         {/* Mobile Menu Button - Left on mobile */}
         <button 
           onClick={() => setIsMobileMenuOpen(true)}
-          className="nav-icon-btn md:hidden -ml-2"
+          className="nav-icon-btn md:hidden -ml-2 relative z-[100]"
           aria-label="Open menu"
         >
           <Menu size={24} />
@@ -227,69 +242,87 @@ export const Navbar = () => {
       <AnimatePresence>
         {isMobileMenuOpen && (
           <>
+            {/* Backdrop */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsMobileMenuOpen(false)}
-              className="fixed inset-0 z-[2000] bg-black/60 backdrop-blur-sm md:hidden"
+              className="fixed inset-0 z-[80] bg-black/55 backdrop-blur-md md:hidden"
             />
+            {/* Drawer Panel */}
             <motion.div
               initial={{ x: '-100%' }}
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed bottom-0 left-0 top-0 z-[2001] w-[280px] bg-surface p-6 shadow-2xl md:hidden flex flex-col"
+              className="fixed bottom-0 left-0 top-0 z-[90] h-[100dvh] w-[clamp(260px,78vw,340px)] bg-surface-2 dark:bg-[#0f1117] shadow-[20px_0_60px_-15px_rgba(0,0,0,0.5)] md:hidden flex flex-col border-r border-border-custom pb-[env(safe-area-inset-bottom,20px)]"
             >
-              <div className="flex items-center justify-between mb-10">
+              <div className="flex items-center justify-between p-6 mb-2">
                 <Link to="/" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2">
-                  <img src="/branding/green-cart.svg" alt="Logo" className="h-7 w-auto" />
-                  <span className="text-lg font-black text-text-primary">FreshCart</span>
+                  <img src="/branding/green-cart.svg" alt="Logo" className="h-8 w-auto" />
+                  <span className="text-xl font-black text-text-primary tracking-tight">FreshCart</span>
                 </Link>
                 <button 
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="p-2 rounded-full hover:bg-muted transition-colors"
+                  className="p-2.5 rounded-full bg-muted/50 hover:bg-muted text-text-primary transition-all active:scale-90"
+                  aria-label="Close menu"
                 >
-                  <X size={24} />
+                  <X size={22} />
                 </button>
               </div>
 
-              <nav className="flex flex-col gap-2">
-                {navLinks.map((link) => (
-                  <NavLink
-                    key={link.to}
-                    to={link.to}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className={({ isActive }) => cn(
-                      'flex items-center px-4 py-4 rounded-2xl text-base font-bold transition-all',
-                      isActive 
-                        ? 'bg-primary-500/10 text-primary-500' 
-                        : 'text-text-secondary hover:bg-muted hover:text-text-primary'
-                    )}
-                  >
-                    {link.label}
-                  </NavLink>
-                ))}
-              </nav>
+              <div className="flex-1 overflow-y-auto px-4 py-2 no-scrollbar">
+                <nav className="flex flex-col gap-1">
+                  {navLinks.map((link) => (
+                    <NavLink
+                      key={link.to}
+                      to={link.to}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className={({ isActive }) => cn(
+                        'flex items-center px-5 py-4 rounded-2xl text-base font-bold transition-all',
+                        isActive 
+                          ? 'bg-primary-500/10 text-primary-500' 
+                          : 'text-text-secondary hover:bg-muted hover:text-text-primary'
+                      )}
+                    >
+                      {link.label}
+                    </NavLink>
+                  ))}
+                </nav>
+              </div>
 
-              <div className="mt-auto pt-10 space-y-4">
+              <div className="mt-auto p-6 space-y-4 border-t border-border-custom bg-surface dark:bg-gray-900 shadow-[0_-10px_30px_rgba(0,0,0,0.1)]">
                 <Link 
                   to="/orders" 
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-text-secondary hover:bg-muted transition-all"
+                  className="flex items-center gap-3 px-5 py-3.5 rounded-xl text-sm font-bold text-text-secondary hover:bg-muted transition-all active:scale-[0.98]"
                 >
-                  <History size={18} />
-                  My Orders
+                  <History size={18} className="text-primary-500" />
+                  My Purchase History
                 </Link>
-                {!isLoggedIn && (
-                  <Link 
-                    to="/login" 
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="flex items-center justify-center w-full py-4 rounded-2xl bg-text-primary text-main font-bold shadow-lg shadow-primary-500/10"
-                  >
-                    Sign In
-                  </Link>
-                )}
+                <div className="pt-2">
+                  {isLoggedIn ? (
+                    <button
+                      onClick={() => {
+                        setIsMobileMenuOpen(false)
+                        logout()
+                      }}
+                      className="flex items-center justify-center w-full py-4 rounded-2xl bg-red-500/10 text-red-500 font-bold hover:bg-red-500/20 transition-all active:scale-[0.98]"
+                    >
+                      <LogOut size={18} className="mr-2" />
+                      Logout
+                    </button>
+                  ) : (
+                    <Link 
+                      to="/login" 
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="flex items-center justify-center w-full py-4 rounded-2xl bg-text-primary text-main font-black shadow-xl shadow-primary-500/10 active:scale-[0.98] transition-all"
+                    >
+                      Sign In to Account
+                    </Link>
+                  )}
+                </div>
               </div>
             </motion.div>
           </>

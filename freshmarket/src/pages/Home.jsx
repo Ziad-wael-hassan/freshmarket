@@ -104,30 +104,30 @@ export const Home = () => {
             </div>
           </ScrollReveal>
  
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {features.map((feature, index) => (
-              <ScrollReveal key={feature.title} delay={index * 0.1}>
+              <ScrollReveal key={feature.title} delay={index * 0.1} className="h-full">
                 <motion.div
-                  whileHover={{ y: -8, scale: 1.02 }}
-                  className="group relative flex flex-col h-full rounded-[2rem] border border-border-custom bg-surface/40 backdrop-blur-xl p-8 text-center shadow-[0_8px_32px_-12px_rgba(0,0,0,0.1)] transition-all duration-500 hover:shadow-[0_20px_40px_-12px_rgba(0,0,0,0.2)] hover:border-primary-500/50 hover:bg-surface/60 overflow-hidden"
+                  whileHover={{ y: -10, scale: 1.02 }}
+                  className="group relative flex flex-col h-full rounded-[2.5rem] border border-white/10 bg-surface/30 backdrop-blur-2xl p-10 text-center shadow-[0_20px_50px_-12px_rgba(0,0,0,0.3),0_0_0_1px_rgba(255,255,255,0.05)] transition-all duration-700 hover:shadow-[0_40px_80px_-12px_rgba(0,0,0,0.4),0_0_0_1px_rgba(34,197,94,0.3)] hover:bg-surface/50 overflow-hidden"
                 >
-                  {/* Subtle Inner Glow for Card */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
+                  {/* Glass highlight effect */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
                   
-                  {/* Icon Container with Radial Glow */}
-                  <div className="relative mb-8 mx-auto">
-                    {/* Background Radial Glow */}
-                    <div className="absolute inset-0 bg-primary-500/20 blur-2xl rounded-full scale-150 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  {/* Icon Container with multi-layered glow */}
+                  <div className="relative mb-10 mx-auto">
+                    <div className="absolute inset-0 bg-primary-500/20 blur-[32px] rounded-full scale-150 opacity-0 group-hover:opacity-100 transition-all duration-700" />
+                    <div className="absolute inset-0 bg-primary-400/10 blur-[16px] rounded-full scale-110 opacity-0 group-hover:opacity-100 transition-all duration-700" />
                     
-                    <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary-400 to-primary-600 text-white shadow-[0_8px_20px_rgba(34,197,94,0.3)] group-hover:shadow-[0_12px_24px_rgba(34,197,94,0.5)] transition-all duration-500">
-                      <feature.icon className="h-8 w-8 transition-transform duration-500 group-hover:scale-110" />
+                    <div className="relative flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-primary-400 to-primary-600 text-white shadow-[0_12px_24px_-4px_rgba(34,197,94,0.4)] group-hover:shadow-[0_20px_40px_-4px_rgba(34,197,94,0.6)] group-hover:rotate-[5deg] transition-all duration-500">
+                      <feature.icon className="h-10 w-10 transition-transform duration-500 group-hover:scale-110" />
                     </div>
                   </div>
 
-                  <h3 className="mb-3 text-xl font-bold text-text-primary tracking-tight">
+                  <h3 className="mb-4 text-2xl font-black text-text-primary tracking-tight font-display">
                     {feature.title}
                   </h3>
-                  <p className="text-sm md:text-base text-text-secondary font-medium leading-relaxed opacity-60 group-hover:opacity-100 transition-opacity duration-500">
+                  <p className="text-sm md:text-base text-text-secondary/70 font-medium leading-relaxed group-hover:text-text-secondary transition-colors duration-500">
                     {feature.description}
                   </p>
                 </motion.div>
