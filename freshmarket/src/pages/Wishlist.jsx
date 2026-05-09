@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import { useWishlist } from '@/hooks/useWishlist'
@@ -5,23 +6,36 @@ import { useCart } from '@/hooks/useCart'
 import { ScrollReveal } from '@/components/common/ScrollReveal'
 import { Button } from '@/components/ui/Button'
 import { ProductCard, ProductCardSkeleton } from '@/components/product/ProductCard'
-import { Heart, ShoppingBag, ArrowLeft, Trash2, ShoppingCart } from 'lucide-react'
+import { Heart, ShoppingBag, ArrowLeft, Trash2, ShoppingCart, Package } from 'lucide-react'
 import { EmptyState } from '@/components/ui/EmptyState'
 import toast from 'react-hot-toast'
 
 export const Wishlist = () => {
-  const { items, clearWishlist, loading } = useWishlist()
-  const { addItem } = useCart()
+  const { items, clearWishlist, loading, removeItem } = useWishlist()
+  const { addItem, cartId } = useCart()
+  const [movingId, setMovingId] = useState(null)
+  const wishlistCount = items.length
+  const wishlistPageTitle = `My Wishlist${wishlistCount > 0 ? ` (${wishlistCount})` : ''} — FreshCart`
 
   const handleAddAllToCart = async () => {
     let successCount = 0
     for (const item of items) {
-      const result = await addItem(item._id)
+      const result = await addItem(item)
       if (result.success) successCount++
     }
     if (successCount > 0) {
       toast.success(`Successfully added ${successCount} items to your cart!`)
     }
+  }
+
+  const handleMoveToCart = async (productId) => {
+    setMovingId(productId)
+    const addResult = await addItem(productId)
+    if (addResult.success) {
+      await removeItem(productId)
+      toast.success('Moved to cart')
+    }
+    setMovingId(null)
   }
 
   if (loading) {
@@ -67,7 +81,7 @@ export const Wishlist = () => {
   return (
     <>
       <Helmet>
-        <title>My Wishlist ({items.length}) — FreshCart</title>
+        <title>{wishlistPageTitle}</title>
       </Helmet>
 
       <div className="container-main py-12">
@@ -85,7 +99,7 @@ export const Wishlist = () => {
               </Link>
               <h1 className="text-4xl font-bold tracking-tight text-text-primary font-display">My Wishlist</h1>
               <p className="text-lg text-text-secondary font-body mt-2">
-                You have <span className="text-text-primary font-bold">{items.length} items</span> saved for later
+                You have <span className="text-text-primary font-bold">{wishlistCount} items</span> saved for later
               </p>
             </div>
             
@@ -114,7 +128,35 @@ export const Wishlist = () => {
         <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {items.map((product, index) => (
             <ScrollReveal key={product._id} delay={index * 0.05}>
-              <ProductCard product={product} />
+              <div className="relative group">
+                {product.quantity === 0 && (
+                  <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/50 rounded-2xl">
+                    <span className="text-white font-bold text-sm tracking-wider uppercase bg-black/60 px-4 py-2 rounded-full">
+                      Out of Stock
+                    </span>
+                  </div>
+                )}
+                {product.quantity > 0 && product.quantity < 5 && (
+                  <div className="absolute top-3 left-3 z-10">
+                    <span className="text-xs font-bold text-orange-600 bg-orange-100 dark:bg-orange-900/60 dark:text-orange-400 px-2.5 py-1 rounded-full">
+                      Low Stock
+                    </span>
+                  </div>
+                )}
+                <ProductCard product={product} />
+                <div className="mt-3">
+                  <Button
+                    size="sm"
+                    className="w-full rounded-xl"
+                    onClick={() => handleMoveToCart(product._id)}
+                    loading={movingId === product._id}
+                    disabled={product.quantity === 0}
+                  >
+                    <Package size={16} className="mr-2" />
+                    Move to Cart
+                  </Button>
+                </div>
+              </div>
             </ScrollReveal>
           ))}
         </div>
@@ -143,7 +185,7 @@ export const Wishlist = () => {
                   <Link to="/cart">View Shopping Cart</Link>
                 </Button>
                 <Button asChild className="flex-1 md:flex-none rounded-2xl py-6 px-10 text-lg font-bold shadow-lg shadow-primary-500/25 transition-all hover:translate-y-[-2px]">
-                  <Link to="/checkout">Checkout Now</Link>
+                  <Link to={cartId ? `/checkout/${cartId}` : '/cart'}>Checkout Now</Link>
                 </Button>
               </div>
             </div>

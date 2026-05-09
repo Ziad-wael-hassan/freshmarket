@@ -12,8 +12,10 @@ import { Input } from '@/components/ui/Input'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { User as UserIcon, Mail, Phone, Calendar, Edit3, ShoppingBag, Heart, Package, Star } from 'lucide-react'
+import { User as UserIcon, Mail, Phone, Calendar, Edit3, ShoppingBag, Heart, Package, Lock, Eye, EyeOff } from 'lucide-react'
+import { authService } from '@/services/authService'
 import { normalizeUser, unwrapApiCollection } from '@/utils/apiData'
+import { changePasswordSchema } from '@/validations/profile'
 import toast from 'react-hot-toast'
 
 const profileSchema = z.object({
@@ -66,9 +68,14 @@ export const Profile = () => {
   const [ordersCount, setOrdersCount] = useState(0)
   const [isEditing, setIsEditing] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [showChangePassword, setShowChangePassword] = useState(false)
+  const [changePasswordLoading, setChangePasswordLoading] = useState(false)
+  const [showCurrent, setShowCurrent] = useState(false)
+  const [showNew, setShowNew] = useState(false)
+  const [showConfirm, setShowConfirm] = useState(false)
 
   const memberSince = user?.createdAt
-    ? new Date(user.createdAt).toLocaleDateString()
+    ? new Date(user.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
     : '—'
   const profileInitial = user?.name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || 'U'
 
@@ -143,6 +150,34 @@ export const Profile = () => {
     setIsEditing(false)
   }
 
+  const {
+    register: registerPassword,
+    handleSubmit: handlePasswordSubmit,
+    formState: { errors: passwordErrors },
+    reset: resetPasswordForm,
+  } = useForm({
+    resolver: zodResolver(changePasswordSchema),
+  })
+
+  const handleChangePassword = async (data) => {
+    setChangePasswordLoading(true)
+    try {
+      await authService.changePassword({
+        currentPassword: data.currentPassword,
+        password: data.newPassword,
+        rePassword: data.confirmPassword,
+      })
+      toast.success('Password changed successfully')
+      resetPasswordForm()
+      setShowChangePassword(false)
+    } catch (error) {
+      const message = error?.response?.data?.message || 'Failed to change password'
+      toast.error(message)
+    } finally {
+      setChangePasswordLoading(false)
+    }
+  }
+
   if (!user?._id) {
     return (
       <div className="container-main py-32 text-center">
@@ -215,6 +250,7 @@ export const Profile = () => {
                         <Input
                           {...register('email')}
                           type="email"
+                          disabled={user?.email?.includes('gmail') || user?.provider === 'google'}
                           error={errors.email?.message}
                           placeholder="Enter your email"
                           className="rounded-xl border-border-custom bg-muted focus:bg-surface transition-all"
@@ -292,6 +328,102 @@ export const Profile = () => {
               </div>
             </ScrollReveal>
 
+            {/* Change Password */}
+            <ScrollReveal>
+              <div className="rounded-3xl border border-border-custom bg-surface p-8 shadow-sm">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-3">
+                    <Lock className="h-5 w-5 text-primary-500" />
+                    <h3 className="text-xl font-bold text-text-primary">Change Password</h3>
+                  </div>
+                  {!showChangePassword && (
+                    <Button variant="outline" size="sm" onClick={() => setShowChangePassword(true)} className="rounded-full px-6">
+                      Update
+                    </Button>
+                  )}
+                </div>
+
+                {showChangePassword && (
+                  <form onSubmit={handlePasswordSubmit(handleChangePassword)} className="space-y-5">
+                    <div className="space-y-2">
+                      <label className="text-sm font-semibold text-text-primary ml-1">Current Password</label>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+                        <Input
+                          {...registerPassword('currentPassword')}
+                          type={showCurrent ? 'text' : 'password'}
+                          placeholder="Enter current password"
+                          className="pl-10 pr-10"
+                          error={passwordErrors.currentPassword?.message}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowCurrent((prev) => !prev)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                          tabIndex={-1}
+                        >
+                          {showCurrent ? <EyeOff size={20} /> : <Eye size={20} />}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-semibold text-text-primary ml-1">New Password</label>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+                        <Input
+                          {...registerPassword('newPassword')}
+                          type={showNew ? 'text' : 'password'}
+                          placeholder="Enter new password"
+                          className="pl-10 pr-10"
+                          error={passwordErrors.newPassword?.message}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowNew((prev) => !prev)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                          tabIndex={-1}
+                        >
+                          {showNew ? <EyeOff size={20} /> : <Eye size={20} />}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-semibold text-text-primary ml-1">Confirm New Password</label>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+                        <Input
+                          {...registerPassword('confirmPassword')}
+                          type={showConfirm ? 'text' : 'password'}
+                          placeholder="Confirm new password"
+                          className="pl-10 pr-10"
+                          error={passwordErrors.confirmPassword?.message}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirm((prev) => !prev)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                          tabIndex={-1}
+                        >
+                          {showConfirm ? <EyeOff size={20} /> : <Eye size={20} />}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-4 pt-4 border-t border-border-custom">
+                      <Button type="submit" loading={changePasswordLoading} className="rounded-full px-8">
+                        Save Password
+                      </Button>
+                      <Button type="button" variant="outline" onClick={() => { setShowChangePassword(false); resetPasswordForm() }} className="rounded-full px-8">
+                        Cancel
+                      </Button>
+                    </div>
+                  </form>
+                )}
+              </div>
+            </ScrollReveal>
+
             {/* Quick Actions Grid */}
             <div className="grid md:grid-cols-3 gap-6">
               <ScrollReveal delay={0.1}>
@@ -330,7 +462,7 @@ export const Profile = () => {
             <StatCard icon={Package} label="Total Orders" value={ordersCount} delay={0.1} />
             <StatCard icon={Heart} label="Wishlist" value={wishlistItems.length} delay={0.2} />
             <StatCard icon={ShoppingBag} label="Cart Items" value={cartItemCount} delay={0.3} />
-            <StatCard icon={Star} label="Reviews" value={0} delay={0.4} />
+
             
             <div className="mt-8 p-6 rounded-3xl bg-primary-500/5 border border-primary-500/10 relative overflow-hidden">
               <div className="relative z-10">
